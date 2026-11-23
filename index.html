@@ -313,13 +313,14 @@ async function shPush(){if(!S.share||!S.share.h||!AUTH.user||!AUTH.fs)return;
  try{await AUTH.fs.collection('shares').doc(S.share.h).set({owner:AUTH.user.uid,updated:Date.now(),json:JSON.stringify(shSnap())})}catch(e){}}
 async function shDel(h){try{if(h&&AUTH.fs)await AUTH.fs.collection('shares').doc(h).delete()}catch(e){}}
 function shareBtn(){if(!AUTH.enabled)return '';return AUTH.user?'<button class="btn sm ghost" data-a="shmenu">Share</button>':'<button class="btn sm ghost" data-a="vwmenu">View with code</button>'}
+function shLink(){return S.share&&S.share.code?location.origin+location.pathname+'#v='+encodeURIComponent(S.share.code):''}
 function sharePanel(){
  if(SHP==='share'&&AUTH.user){const on=!!(S.share&&S.share.h);
   return '<div class="lkp"><h3>Share a view-only copy</h3><p>'+(on?'Sharing is <b>on</b>. Friends see what is on your dashboard now, and it updates as you change things. They can’t edit anything.':'Give friends a code. They open your link, press <b>View with code</b>, and can look but not change anything.')+'</p>'
-  +'<input id="sh-code" type="text" autocomplete="off" placeholder="'+(on?'New code (leave empty to keep the same)':'Pick a code (6+ characters)')+'" aria-label="Share code">'
+  +'<input id="sh-code" type="text" autocomplete="off" placeholder="'+(on?'New code (leave empty to keep the same)':'Pick a code, or leave empty for a random one')+'" aria-label="Share code">'
   +'<label><input type="checkbox" id="sh-money"'+(S.share&&S.share.money?' checked':'')+'> Show money (salary and bills)</label>'
   +'<label><input type="checkbox" id="sh-th"'+(S.share&&S.share.th?' checked':'')+'> Show thought dump</label>'
-  +'<div class="msg'+(SHOK?' ok':'')+'" id="sh-msg" role="alert">'+esc(SHNOTE)+'</div>'+(SHLINK?'<input id="sh-link" type="text" readonly value="'+esc(SHLINK)+'" aria-label="Share link"><div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="sh-copy">Copy link</button></div>':'')
+  +'<div class="msg'+(SHOK?' ok':'')+'" id="sh-msg" role="alert">'+esc(SHNOTE)+'</div>'+(on&&S.share.code?'<p style="margin:4px 0 4px">Your share link (it always works while sharing is on):</p><input id="sh-link" type="text" readonly value="'+esc(shLink())+'" aria-label="Share link"><p style="margin:0 0 8px">Or tell them to open <b>'+esc(location.origin+location.pathname)+'#view</b> and type the code <b>'+esc(S.share.code)+'</b>.</p><div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="sh-copy">Copy link</button></div>':(on?'<p style="margin:4px 0 8px">Type a new code and press Update to get a link you can copy.</p>':''))
   +'<div class="row"><button class="btn sm" data-a="sh-save">'+(on?'Update':'Start sharing')+'</button>'+(on?'<button class="btn sm ghost" data-a="sh-stop">Stop sharing</button>':'')+'<button class="btn sm ghost" data-a="shmenu">Close</button></div></div>'}
  if(SHP==='view'&&!AUTH.user){
   return '<div class="lkp"><h3>View a shared dashboard</h3><p>Type the code you were given. You can only look. It isn’t remembered, so you’ll be asked again next time.</p>'
@@ -605,7 +606,7 @@ const TR_STOP=new Set("the and for that this with have was but not you are just 
 const TR_SAFE=/(kill myself|killing myself|suicid|want to die|wanna die|end my life|end it all|hurt myself|self.?harm|ayoko na mabuhay|gusto ko nang mamatay)/i;
 function truthCard(items,dates,span){
  if(!items||!items.length)return '';
- const n=items.length,lab=span==='day'?'today':'this '+span,seed0=(UI.truthN||0);
+ const n=items.length,lab=span==='day'?'today':'this '+span,seed0=(UI.truthN||0)+new Date().getDate();
  const txt=items.map(t=>t.x).join(' \n '),low=txt.toLowerCase();
  const head='<section class="card pink s12" data-th="1"><div class="ch"><h2>Unhinged truth card</h2><span class="muted" style="font-size:13px">'+lab+'</span></div>';
  if(TR_SAFE.test(txt))return head+'<p style="margin:0 0 8px;font-size:15px">Some of what you wrote sounds really heavy, so no roasting this time. I’m glad you got it out of your head.</p><p class="muted" style="margin:0;font-size:13.5px">If you ever feel unsafe or like hurting yourself, please tell someone you trust right now. In the Philippines you can call the NCMH Crisis Hotline at 1553.</p></section>';
@@ -808,11 +809,13 @@ document.addEventListener('click',e=>{
  if(a==='sh-save'){(async()=>{
   const code=val('sh-code').trim(),money=!!(document.getElementById('sh-money')||{}).checked,th=!!(document.getElementById('sh-th')||{}).checked;
   const had=S.share&&S.share.h;
-  if((!had||code)&&code.length<6){SHNOTE='Pick a code with at least 6 characters.';SHOK=false;render();return}
-  let h=had;if(code){h=await shHash(code);if(had&&had!==h)await shDel(had)}
-  S.share={h,money,th};commit();await shPush();
-  SHLINK=code?location.origin+location.pathname+'#v='+encodeURIComponent(code):SHLINK;SHNOTE=code?'Sharing is on. Send friends the link below.':'Updated.';SHOK=true;render()})();return}
- if(a==='sh-copy'){const t=SHLINK;try{navigator.clipboard.writeText(t).then(()=>{SHNOTE='Link copied.';render()},()=>{const e=document.getElementById('sh-link');if(e){e.select()}})}catch(_){const e=document.getElementById('sh-link');if(e)e.select()}return}
+  if(code&&code.length<6){SHNOTE='The code needs at least 6 characters.';SHOK=false;render();return}
+  let c2=code||(S.share&&S.share.code)||'';
+  if(!c2){const al='abcdefghjkmnpqrstuvwxyz23456789';const r=new Uint32Array(8);try{crypto.getRandomValues(r)}catch(_){for(let i=0;i<8;i++)r[i]=Math.random()*4e9}c2=Array.from(r).map(x=>al[x%al.length]).join('')}
+  let h=had;if(code||!had){h=await shHash(c2);if(had&&had!==h)await shDel(had)}
+  S.share={h,code:c2,money,th};commit();await shPush();
+  SHNOTE=code||!had?'Sharing is on. Send friends the link below.':'Updated.';SHOK=true;render()})();return}
+ if(a==='sh-copy'){const t=shLink()||SHLINK;try{navigator.clipboard.writeText(t).then(()=>{SHNOTE='Link copied.';render()},()=>{const e=document.getElementById('sh-link');if(e){e.select()}})}catch(_){const e=document.getElementById('sh-link');if(e)e.select()}return}
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
