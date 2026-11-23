@@ -141,6 +141,16 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .pre{padding:6px 14px;border-radius:99px;border:1px solid #6e5b22;font-weight:700;font-size:13.5px}
 .pre.on{background:var(--pri);color:#2b2410;border-color:var(--pri)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.lock{max-width:360px;margin:12vh auto;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px 26px;box-shadow:0 8px 30px rgba(120,90,0,.12);text-align:center}
+.lock h1{font-size:26px;margin:0 0 4px}.lock p{margin:0 0 16px;color:#6b5a1e;font-size:14px}
+.lock input{width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;margin-bottom:10px;background:#fffdf3}
+.lock .row{display:flex;gap:8px;margin-top:4px}.lock .row .btn{flex:1}
+.lock .msg{min-height:18px;font-size:13px;color:#b3261e;margin:2px 0 8px}.lock .msg.ok{color:#2e7d32}
+.lkp{max-width:420px;margin:0 auto 14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.lkp h3{margin:0 0 4px;font-size:16px}.lkp p{margin:0 0 10px;font-size:13px;color:#6b5a1e}
+.lkp input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:8px;background:#fffdf3}
+.lkp .row{display:flex;gap:8px;flex-wrap:wrap}.lkp .msg{min-height:16px;font-size:13px;color:#b3261e;margin:0 0 6px}.lkp .msg.ok{color:#2e7d32}
 </style>
 </head>
 <body>
@@ -269,6 +279,25 @@ async function initCloud(){
 }
 function dispName(){return S.name||((AUTH.user&&AUTH.user.displayName)||'').slice(0,30)||'friend'}
 function commit(){save();render()}
+/* ---------- password lock (this device only) ---------- */
+const LK='pbb-lock-v1';
+function lkGet(){try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(_){return null}}
+async function lkHash(pw,salt){const t=salt+'|'+pw;try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_){}let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'f'+h}
+async function lkCheck(pw){const l=lkGet();return !!l&&(await lkHash(pw,l.s))===l.h}
+let LOCKED=!!lkGet(),LKPANEL=false,LKNOTE='',LKOK=false;
+const $v=id=>{const e=document.getElementById(id);return e?e.value:''};
+function lockBtn(){return '<button class="btn sm ghost" data-a="lockmenu">'+(lkGet()?'Password':'Set password')+'</button>'}
+function lockPanel(){if(!LKPANEL)return '';const has=!!lkGet();
+ return '<div class="lkp"><h3>'+(has?'Change or remove password':'Set a password')+'</h3><p>Asked each time you open this page, on this device only. Pick something you will remember.</p>'
+ +(has?'<input id="lkp-old" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password">':'')
+ +'<input id="lkp-new" type="password" autocomplete="new-password" placeholder="'+(has?'New password':'Password')+' (4+ characters)" aria-label="New password">'
+ +'<input id="lkp-new2" type="password" autocomplete="new-password" placeholder="Type it again" aria-label="Confirm password">'
+ +'<div class="msg'+(LKOK?' ok':'')+'" id="lkp-msg" role="alert">'+esc(LKNOTE)+'</div>'
+ +'<div class="row"><button class="btn sm" data-a="lk-save">Save</button>'+(has?'<button class="btn sm ghost" data-a="lk-now">Lock now</button><button class="btn sm ghost" data-a="lk-remove">Remove password</button>':'')+'<button class="btn sm ghost" data-a="lockmenu">Close</button></div></div>'}
+function lockScreen(){document.title='pbb-day';
+ document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter your password to open your day.</p><input id="lk-pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><div class="msg" id="lk-msg" role="alert"></div><button class="btn" data-a="lk-open">Open</button></div>';
+ const e=document.getElementById('lk-pw');if(e)try{e.focus()}catch(_){}}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='lk-pw'){const b=document.querySelector('[data-a="lk-open"]');if(b)b.click()}});
 
 /* ---------- motivation + focus timer ---------- */
 const QUOTES=[
@@ -555,6 +584,7 @@ function monthView(){
 }
 
 function render(){
+ if(LOCKED){lockScreen();return}
  const keep={};document.querySelectorAll('[data-keep]').forEach(e=>{keep[e.dataset.keep]=e.value});
  const ae=document.activeElement,fk=ae&&ae.dataset?ae.dataset.keep:null;
  const D=UI.date;
@@ -567,8 +597,8 @@ function render(){
  document.getElementById('app').innerHTML=
   '<div class="top"><div class="logo">🌿 My Day</div><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
-  +'</div>'+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
-  +'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
+  +'</div>'+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
+  +lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
  document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!==undefined&&keep[e.dataset.keep]!==''||e.dataset.keep==='newRemT'&&keep.newRemT)e.value=keep[e.dataset.keep]});
  if(fk){const e=document.querySelector('[data-keep="'+fk+'"]');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
  const st=remStats(key(new Date()));
@@ -586,6 +616,19 @@ function addThought(){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');if(!t)return;
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
+ if(a==='lk-open'){lkCheck($v('lk-pw')).then(ok=>{if(ok){LOCKED=false;render()}else{const m=document.getElementById('lk-msg');if(m)m.textContent='Wrong password.';const i=document.getElementById('lk-pw');if(i){i.value='';i.focus()}}});return}
+ if(a==='lockmenu'){LKPANEL=!LKPANEL;LKNOTE='';LKOK=false;render();return}
+ if(a==='lk-now'){if(lkGet()){LOCKED=true;LKPANEL=false;render()}return}
+ if(a==='lk-save'||a==='lk-remove'){(async()=>{
+  const has=!!lkGet();
+  if(has&&!(await lkCheck($v('lkp-old')))){LKNOTE='Current password is wrong.';LKOK=false;render();return}
+  if(a==='lk-remove'){try{localStorage.removeItem(LK)}catch(_){}LKNOTE='Password removed.';LKOK=true;render();return}
+  const n=$v('lkp-new');
+  if(n.length<4){LKNOTE='Use at least 4 characters.';LKOK=false;render();return}
+  if(n!==$v('lkp-new2')){LKNOTE='The two passwords don’t match.';LKOK=false;render();return}
+  const salt=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  try{localStorage.setItem(LK,JSON.stringify({s:salt,h:await lkHash(n,salt)}))}catch(_){LKNOTE='Couldn’t save on this device.';LKOK=false;render();return}
+  LKNOTE='Password saved. It will be asked next time you open the page.';LKOK=true;render()})();return}
  if(a==='signin'&&AUTH.auth){const p=new firebase.auth.GoogleAuthProvider();AUTH.auth.signInWithPopup(p).catch(e=>{if(e&&/popup|operation-not-supported/.test(e.code||''))AUTH.auth.signInWithRedirect(p)});return}
  if(a==='signout'&&AUTH.auth){AUTH.auth.signOut().then(()=>{try{localStorage.removeItem(STORE)}catch(_){}S=defaults();migrate();ref=null;render()});return}
  if(a==='view'){UI.view=t.dataset.v;UI.editW=null;try{history.replaceState(null,'','#'+UI.view)}catch(_){}render();return}
