@@ -21,9 +21,9 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 'DM Sans',system-ui,sans-serif}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #c98a00;outline-offset:2px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--fill);outline-offset:2px}
 .wrap{max-width:1180px;margin:0 auto;padding:14px}
-.shell{background:#fffcef;border:1px solid var(--line);border-radius:28px;padding:22px}
+.shell{background:var(--shell);border:1px solid var(--line);border-radius:28px;padding:22px}
 .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .logo{cursor:pointer;color:inherit;font:600 17px 'Fraunces',serif;background:#fff;border:1px solid var(--line);border-radius:99px;padding:8px 16px;display:flex;gap:8px;align-items:center}
 .tabs{display:flex;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px;margin:0 auto}
@@ -45,14 +45,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 @media(max-width:680px){.s3,.s4{grid-column:span 12}.shell{padding:14px;border-radius:22px}.tabs{order:3;width:100%;justify-content:center}.tab{flex:1;text-align:center;padding:8px 6px}}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
 .card.lav{background:var(--lav);border-color:transparent}
-.card.navy{background:var(--navy);color:#fff6dc;border-color:transparent}
+.card.navy{background:var(--navy);color:var(--navytx);border-color:transparent}
 .card.pink{background:var(--pink);border-color:transparent}
 .card h2{font:700 17px 'DM Sans';margin:0}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
-.muted{color:var(--mute)}.navy .muted{color:#eadcaa}
+.muted{color:var(--mute)}.navy .muted{color:var(--navyt)}
 .hello{grid-column:span 7;padding:6px 4px}
 .hello h1{font:600 clamp(30px,4.6vw,46px)/1.1 'Fraunces',serif;margin:0 0 8px}
-.nameinp{font:inherit;border:0;border-bottom:2px dashed #e6c65c;background:transparent;color:var(--prid);width:6.5ch;min-width:3ch;padding:0}
+.nameinp{font:inherit;border:0;border-bottom:2px dashed var(--line2);background:transparent;color:var(--prid);width:6.5ch;min-width:3ch;padding:0}
 .hello p{margin:0;color:var(--mute);max-width:46ch}
 .tiles{grid-column:span 5;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .tile{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px}
@@ -67,11 +67,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .rl{flex:1;min-width:0;overflow-wrap:anywhere}
 .tm{font-size:12px;background:var(--lav2);color:var(--prid);border-radius:99px;padding:3px 9px;white-space:nowrap;font-weight:700}
 .rem.due .tm{background:var(--pink);color:var(--bad)}
-.ck{width:26px;height:26px;border-radius:8px;border:2px solid #d9b440;background:#fff;color:transparent;font-size:15px;line-height:1;flex:none;display:grid;place-items:center}
+.ck{width:26px;height:26px;border-radius:8px;border:2px solid var(--line2);background:#fff;color:transparent;font-size:15px;line-height:1;flex:none;display:grid;place-items:center}
 .ck.on{background:var(--pri);border-color:var(--fill);color:var(--ink)}
 .ck.sm{width:22px;height:22px;font-size:13px;border-radius:7px}
 .in{font:inherit;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;min-width:0;width:100%;color:var(--ink)}
-.navy .in{background:#4d3e15;border-color:#6e5b22;color:#fff6dc}
+.navy .in{background:var(--navy2);border-color:var(--navy3);color:var(--navytx)}
 textarea.in{resize:vertical;min-height:86px}
 .addrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .addrow .in{flex:1 1 110px}
@@ -114,7 +114,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .g th{font-weight:700;color:var(--mute);font-size:12px}
 .g td:first-child,.g th:first-child{text-align:left}
 .g .t{background:var(--lav2);border-radius:8px}
-.hk{color:var(--prid);font-weight:700}.mi{color:#c9b98a}
+.hk{color:var(--prid);font-weight:700}.mi{color:var(--line2)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .cal .ch{display:block;margin:0;text-align:center;font-size:11px;color:var(--mute);font-style:normal}
 .cc{aspect-ratio:1;border-radius:9px;background:var(--lav2);font-style:normal;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;line-height:1;position:relative;min-height:30px}
@@ -128,52 +128,55 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .hb .v{width:40px;text-align:right;color:var(--mute);font-size:12.5px}
 .wd{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.14)}
 .wd:first-of-type{border-top:0}
-.wd .dd{width:38px;font-weight:700;color:#eadcaa}
+.wd .dd{width:38px;font-weight:700;color:var(--navyt)}
 .wd .tt{flex:1;min-width:0}
-.wd .tt small{display:block;color:#eadcaa}
+.wd .tt small{display:block;color:var(--navyt)}
 .wd .st{font-size:13px}
 .sec{font-size:13px;color:var(--mute);margin:14px 0 4px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .empty{color:var(--mute);font-size:14px;padding:8px 0}
 .mgrid td{padding:4px 2px}
 .mgrid .e{font-size:18px}
-.card.gold{background:var(--pri);border-color:transparent;color:#2b2410}
-.gold .muted{color:#3b2f0b}
+.card.gold{background:var(--pri);border-color:transparent;color:var(--ink)}
+.gold .muted{color:var(--navy)}
 .quote{font:500 clamp(20px,2.4vw,27px)/1.3 'Fraunces',serif;margin:6px 0 16px}
 .clock{font:600 clamp(44px,6vw,64px)/1 'Fraunces',serif;letter-spacing:.02em;margin:4px 0 10px;font-variant-numeric:tabular-nums}
 .pbar.dark{background:rgba(255,246,220,.2);margin-bottom:14px}
 .pbar.dark i{background:var(--pri)}
-.pre{padding:6px 14px;border-radius:99px;border:1px solid #6e5b22;font-weight:700;font-size:13.5px}
-.pre.on{background:var(--pri);color:#2b2410;border-color:var(--pri)}
+.pre{padding:6px 14px;border-radius:99px;border:1px solid var(--navy3);font-weight:700;font-size:13.5px}
+.pre.on{background:var(--pri);color:var(--ink);border-color:var(--pri)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .lock{max-width:360px;margin:12vh auto;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px 26px;box-shadow:0 8px 30px rgba(120,90,0,.12);text-align:center}
-.lock h1{font-size:26px;margin:0 0 4px}.lock p{margin:0 0 16px;color:#6b5a1e;font-size:14px}
-.lock input{width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;margin-bottom:10px;background:#fffdf3}
+.lock h1{font-size:26px;margin:0 0 4px}.lock p{margin:0 0 16px;color:var(--mute);font-size:14px}
+.lock input{width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;margin-bottom:10px;background:var(--soft)}
 .lock .row{display:flex;gap:8px;margin-top:4px}.lock .row .btn{flex:1}
 .lock .msg{min-height:18px;font-size:13px;color:#b3261e;margin:2px 0 8px}.lock .msg.ok{color:#2e7d32}
 .lkp{max-width:420px;margin:0 auto 14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px}
-.lkp h3{margin:0 0 4px;font-size:16px}.lkp p{margin:0 0 10px;font-size:13px;color:#6b5a1e}
-.lkp input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:8px;background:#fffdf3}
+.lkp h3{margin:0 0 4px;font-size:16px}.lkp p{margin:0 0 10px;font-size:13px;color:var(--mute)}
+.lkp input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:8px;background:var(--soft)}
 .lkp .row{display:flex;gap:8px;flex-wrap:wrap}.lkp .msg{min-height:16px;font-size:13px;color:#b3261e;margin:0 0 6px}.lkp .msg.ok{color:#2e7d32}
 
 .wm{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 30px;gap:8px 6px;align-items:center;justify-items:center;margin-top:12px}
-.wm .h{font-size:12px;color:#eadcaa;font-weight:700}
-.wm .d{width:100%;max-width:36px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:#4d3e15;color:#eadcaa;border:0;cursor:pointer;padding:0;font-family:inherit}
-.wm .d.on{background:#f5b800;color:#2b2410;font-weight:800}
-.wm .d.out{opacity:.3;cursor:default}.wm .d.fut{background:transparent;border:1px dashed #6e5b22;cursor:default}
-.wm .d.tdy{outline:2px solid #fff6dc;outline-offset:1px}
-.wm .k{width:24px;height:24px;border-radius:50%;border:2px solid #6e5b22;display:flex;align-items:center;justify-content:center;font-size:12px;color:#2b2410}
-.wm .k.half{border-color:#f5b800}.wm .k.on{background:#f5b800;border-color:#f5b800}
-.wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:#f5b800;line-height:1}
-.wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:#eadcaa}
+.wm .h{font-size:12px;color:var(--navyt);font-weight:700}
+.wm .d{width:100%;max-width:36px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--navy2);color:var(--navyt);border:0;cursor:pointer;padding:0;font-family:inherit}
+.wm .d.on{background:var(--pri);color:var(--ink);font-weight:800}
+.wm .d.out{opacity:.3;cursor:default}.wm .d.fut{background:transparent;border:1px dashed var(--navy3);cursor:default}
+.wm .d.tdy{outline:2px solid var(--navytx);outline-offset:1px}
+.wm .k{width:24px;height:24px;border-radius:50%;border:2px solid var(--navy3);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink)}
+.wm .k.half{border-color:var(--pri)}.wm .k.on{background:var(--pri);border-color:var(--pri)}
+.wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:var(--pri);line-height:1}
+.wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:var(--navyt)}
 .stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
+.swb i{width:22px;height:22px;border-radius:50%;flex:none}.swb.on{border-color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="wrap"><div class="shell" id="app"></div></div>
 <script>
 "use strict";
-/* ================= PASTE YOUR FIREBASE CONFIG HERE (see SETUP.md) ================= */
+/* ================= PASTE YOUR FIREBASE CONFIG HERE (see README.md) ================= */
 const FIREBASE_CONFIG={
  apiKey:"AIzaSyBaHNVzAaULrqOwZXTJCq7ov2QTBHsXD9I",
  authDomain:"pbb-day.firebaseapp.com",
@@ -281,7 +284,7 @@ function attach(r){
 }
 async function initCloud(){
  try{
-  if(typeof firebase==='undefined'||/PASTE/.test(FIREBASE_CONFIG.apiKey)){setSync('local');return}
+  if(typeof firebase==='undefined'||!FIREBASE_CONFIG.apiKey||/PASTE/.test(FIREBASE_CONFIG.apiKey)){setSync('local');return}
   firebase.initializeApp(FIREBASE_CONFIG);
   AUTH.enabled=true;AUTH.auth=firebase.auth();const fs=firebase.firestore();
   AUTH.auth.getRedirectResult().catch(()=>{});
@@ -295,6 +298,34 @@ async function initCloud(){
 }
 function dispName(){return S.name||((AUTH.user&&AUTH.user.displayName)||'').slice(0,30)||'friend'}
 function commit(){save();render()}
+/* ---------- color themes ---------- */
+const THEMES={
+ yellow:{n:'Yellow',bg:'#fff8dc',lav:'#ffe58a',lav2:'#fff1c2',pink:'#ffe0b2',pink2:'#f5a65b',ink:'#2b2410',mute:'#6b5a2e',pri:'#f5b800',prih:'#ffc933',prid:'#7a4f00',fill:'#e0a100',navy:'#3b2f0b',navy2:'#4d3e15',navy3:'#6e5b22',navyt:'#eadcaa',navytx:'#fff6dc',line:'#f0e2a8'},
+ orange:{n:'Orange',bg:'#fff4e6',lav:'#ffd9a8',lav2:'#ffecd2',pink:'#ffd1b8',pink2:'#ff8a3d',ink:'#2e1a05',mute:'#6e4a22',pri:'#ff9a1f',prih:'#ffb24d',prid:'#a34400',fill:'#f26a00',navy:'#4a2400',navy2:'#653400',navy3:'#8a4a10',navyt:'#ffe2c2',navytx:'#fff1e0',line:'#f5d9b8'},
+ red:{n:'Red',bg:'#fff0f0',lav:'#ffc9c9',lav2:'#ffe3e3',pink:'#ffd9c9',pink2:'#ff6b6b',ink:'#2c0b0b',mute:'#6e3a3a',pri:'#ff4d4d',prih:'#ff7777',prid:'#a01212',fill:'#d62d2d',navy:'#4a0f0f',navy2:'#6a1a1a',navy3:'#8f2b2b',navyt:'#ffd2d2',navytx:'#ffeaea',line:'#f5cccc'},
+ pink:{n:'Pink',bg:'#fff1f3',lav:'#ffd0d4',lav2:'#ffe6e8',pink:'#ffdcd0',pink2:'#f77387',ink:'#35121a',mute:'#7a4650',pri:'#f77387',prih:'#ff95a5',prid:'#a3283f',fill:'#e0707a',navy:'#5a2230',navy2:'#7a3142',navy3:'#9c4a5c',navyt:'#ffd6dc',navytx:'#ffeef0',line:'#f7d0d5'},
+ purple:{n:'Purple',bg:'#fbf1f7',lav:'#ecc4de',lav2:'#f6e0ee',pink:'#ffd9e0',pink2:'#c969a6',ink:'#2a1024',mute:'#6a4560',pri:'#d58bb8',prih:'#e8a6cb',prid:'#6d2a58',fill:'#9c5c8f',navy:'#4d1f40',navy2:'#6a2e59',navy3:'#8a4a77',navyt:'#f1d3e5',navytx:'#fbeaf3',line:'#ecd3e3'},
+ maroon:{n:'Maroon',bg:'#fdeff6',lav:'#f6c1de',lav2:'#fbe0ee',pink:'#ffd0e0',pink2:'#ee2f8f',ink:'#2b0a1d',mute:'#6e3a57',pri:'#ee2f8f',prih:'#ff5fae',prid:'#7a1456',fill:'#a81f78',navy:'#4d0630',navy2:'#6b0f45',navy3:'#8c1c5f',navyt:'#f5c6dd',navytx:'#fde8f2',line:'#f1cfe0'},
+ blue:{n:'Blue',bg:'#eef9ff',lav:'#bfeaff',lav2:'#e0f5ff',pink:'#d6e4ff',pink2:'#5a7dff',ink:'#0b1b3a',mute:'#35507a',pri:'#19a7ff',prih:'#4dbcff',prid:'#0a3fd0',fill:'#1177e6',navy:'#0d2a6b',navy2:'#1a3d8f',navy3:'#2f58b5',navyt:'#cfe3ff',navytx:'#eaf3ff',line:'#cfe8f7'},
+ green:{n:'Green',bg:'#f3fbe9',lav:'#d4f0a8',lav2:'#e8f7cf',pink:'#ecf5b0',pink2:'#8cc63f',ink:'#14290f',mute:'#3d5a2c',pri:'#55b53a',prih:'#7fd05f',prid:'#1f6b28',fill:'#3a9a3d',navy:'#1f4a1f',navy2:'#2e6a2c',navy3:'#3f8a3c',navyt:'#d8f0c8',navytx:'#f0fbe8',line:'#d8ecb8'},
+ gray:{n:'Gray',bg:'#f1f2f6',lav:'#d7dae6',lav2:'#e8eaf1',pink:'#e2e0ee',pink2:'#7d86a8',ink:'#14151f',mute:'#4f5370',pri:'#8e97b8',prih:'#a9b0cc',prid:'#2f3350',fill:'#6c7490',navy:'#353850',navy2:'#474b68',navy3:'#5d6285',navyt:'#dfe2f0',navytx:'#f2f3f9',line:'#d5d8e4'}
+};
+const hx=c=>[1,3,5].map(i=>parseInt(c.substr(i,2),16));
+const mixc=(a,b,t)=>{const A=hx(a),B=hx(b);return '#'+A.map((v,i)=>Math.round(v*(1-t)+B[i]*t).toString(16).padStart(2,'0')).join('')};
+function applyTheme(name){
+ const t=THEMES[name]||THEMES.yellow,r=document.documentElement.style;
+ for(const k in t)if(k!=='n')r.setProperty('--'+k,t[k]);
+ r.setProperty('--soft',mixc(t.bg,'#ffffff',.65));r.setProperty('--shell',mixc(t.bg,'#ffffff',.55));r.setProperty('--line2',mixc(t.line,t.pri,.45));
+ r.setProperty('--pri-rgb',hx(t.pri).join(','));
+ try{const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.bg);
+  const ic=document.querySelector('link[rel=icon]');if(ic)ic.setAttribute('href','data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='"+t.pri+"'/><circle cx='32' cy='32' r='11' fill='"+t.bg+"'/><g stroke='"+t.bg+"' stroke-width='5' stroke-linecap='round'><path d='M32 8v7M32 49v7M8 32h7M49 32h7M15 15l5 5M44 44l5 5M49 15l-5 5M20 44l-5 5'/></g></svg>"))}catch(_){}
+}
+let THPANEL=false;
+function themeBtn(){return '<button class="btn sm ghost" data-a="thmenu">Theme</button>'}
+function themePanel(){if(!THPANEL)return '';const cur=S.theme||'yellow';
+ return '<div class="lkp"><h3>Choose a color</h3><p>Saved to your account, so it follows you to your other devices.</p><div class="sw">'
+ +Object.keys(THEMES).map(k=>'<button class="swb'+(k===cur?' on':'')+'" data-a="theme" data-t="'+k+'" aria-pressed="'+(k===cur)+'" aria-label="'+THEMES[k].n+'"><i style="background:'+THEMES[k].pri+'"></i><span>'+THEMES[k].n+'</span></button>').join('')
+ +'</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" data-a="thmenu">Close</button></div></div>'}
 /* ---------- password lock (this device only) ---------- */
 const LK='pbb-lock-v1';
 function lkGet(){try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(_){return null}}
@@ -468,7 +499,7 @@ function workoutMonth(D){
  let h='<section class="card navy s6"><div class="ch"><h2>'+D.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</h2></div>'
  +'<div class="wstats"><div><span>Your streak</span><b>'+st.n+' week'+(st.n===1?'':'s')+'</b></div><div><span>Streak workouts</span><b>'+st.act+'</b></div></div>'
  +'<div class="wm">'+['M','T','W','T','F','S','S'].map(x=>'<span class="h">'+x+'</span>').join('')
- +'<span class="fl" title="Week streak"><svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true"><path d="M8 0c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 2 3 4 1-3 1-6 1-9z" fill="#f5b800"/></svg>'+st.n+'</span>';
+ +'<span class="fl" title="Week streak"><svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true"><path d="M8 0c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 2 3 4 1-3 1-6 1-9z" fill="var(--pri)"/></svg>'+st.n+'</span>';
  const first=new Date(y,mo,1),last=new Date(y,mo+1,0);let mon=weekDates(first)[0];
  while(mon<=last){
   for(let i=0;i<7;i++){const d=addDays(mon,i),k=key(d),inM=d.getMonth()===mo,done=!!S.wdone[k],fut=k>tk;
@@ -512,8 +543,8 @@ function moneyPanel(ym,which,cls){
  return '<section class="card money '+(cls||'s6')+'"><div class="mh"><div><h2>'+MON[mo-1]+' '+which+' paycheck</h2><span class="chip">'+chip+'</span></div>'
  +'<label class="sal">Salary <input class="in" type="number" inputmode="decimal" min="0" data-c="sal" data-p="'+which+'" value="'+c.sal+'"></label></div>'
  +'<div class="big"><b class="'+(over?'neg':'')+'">'+pct(c.pct)+'</b><span>'+(over?'over budget by '+peso(-c.left):'left after all bills')+' <span class="muted">· '+peso(c.left)+' of '+peso(c.sal)+'</span></span></div>'
- +'<div class="bar" role="img" aria-label="'+pct(c.paidPct)+' paid, '+pct(c.sal?c.unpaid/c.sal*100:0)+' still to pay, '+pct(Math.max(0,c.pct))+' left"><i style="width:'+wPaid+'%;background:#7a4f00"></i><i style="width:'+wUn+'%;background:#f5b800"></i><i style="width:'+wLeft+'%;background:#f6a77a"></i></div>'
- +'<div class="legend"><span><u style="background:#7a4f00"></u>Paid '+peso(c.paid)+' ('+pct(c.paidPct)+')</span><span><u style="background:#f5b800"></u>To pay '+peso(c.unpaid)+'</span><span><u style="background:#f6a77a"></u>Left '+peso(Math.max(0,c.left))+'</span></div>'
+ +'<div class="bar" role="img" aria-label="'+pct(c.paidPct)+' paid, '+pct(c.sal?c.unpaid/c.sal*100:0)+' still to pay, '+pct(Math.max(0,c.pct))+' left"><i style="width:'+wPaid+'%;background:var(--prid)"></i><i style="width:'+wUn+'%;background:var(--pri)"></i><i style="width:'+wLeft+'%;background:var(--pink2)"></i></div>'
+ +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(c.paid)+' ('+pct(c.paidPct)+')</span><span><u style="background:var(--pri)"></u>To pay '+peso(c.unpaid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,c.left))+'</span></div>'
  +(rows||'<div class="empty">No bills for this paycheck yet.</div>')
  +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="₱ amount" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
 }
@@ -575,7 +606,7 @@ function weekView(){
   const status=done?'✓ Done':rest?'Rest':k>tk?'Upcoming':k===tk?'Today':'Missed';
   const editing=UI.editW===d.getDay();
   return '<div class="wd"><span class="dd">'+DOW[d.getDay()]+'</span><span class="tt">'+(editing?workoutBlock(d.getDay(),k):esc(w.title)+'<small>'+esc(w.ex.split('\n')[0]||'')+'</small>')+'</span>'+(editing?'':'<span class="st">'+status+'</span><button class="btn sm light" data-a="editW" data-d="'+d.getDay()+'" aria-label="Edit '+DOW[d.getDay()]+' workout">Edit</button>')+'</div>'}).join('');
- const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:#4d3e15;color:#fff6dc">'+did+' done</span></div>'+wrows+'</section>';
+ const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:var(--navy2);color:var(--navytx)">'+did+' done</span></div>'+wrows+'</section>';
  const ms=moodStats(keys);
  const mrows=SLOTS.map(([k,l,ic])=>'<tr><td>'+ic+' '+l+'</td>'+keys.map(dk=>{const v=(S.mood[dk]||{})[k];return '<td class="e">'+(v&&v.v?'<span title="'+MOODS[v.v].w+'">'+MOODS[v.v].e+'</span>':'<span class="mi">·</span>')+'</td>'}).join('')+'</tr>').join('');
  const avgRow='<tr><td class="muted">Average</td>'+keys.map(dk=>{const s=moodStats([dk]);return '<td class="muted">'+(s.n?s.avg.toFixed(1):'·')+'</td>'}).join('')+'</tr>';
@@ -604,22 +635,22 @@ function monthView(){
  const inc=c1.sal+c2.sal,bills=c1.total+c2.total,paid=c1.paid+c2.paid,left=inc-bills,lp=inc?left/inc*100:0;
  const wP=inc?Math.min(100,paid/inc*100):0,wU=inc?Math.max(0,Math.min(100-wP,(bills-paid)/inc*100)):0,wL=Math.max(0,100-wP-wU);
  const sum='<section class="card s12"><div class="ch"><h2>Money this month</h2><span class="muted">Each paycheck is tracked separately below</span></div><div class="big"><b class="'+(left<0?'neg':'')+'">'+pct(lp)+'</b><span>'+(left<0?'over budget by '+peso(-left):'of the month’s pay left after all bills')+' <span class="muted">· '+peso(left)+' of '+peso(inc)+'</span></span></div>'
-  +'<div class="bar" role="img" aria-label="Month: '+pct(inc?paid/inc*100:0)+' paid, '+pct(Math.max(0,lp))+' left"><i style="width:'+wP+'%;background:#7a4f00"></i><i style="width:'+wU+'%;background:#f5b800"></i><i style="width:'+wL+'%;background:#f6a77a"></i></div>'
-  +'<div class="legend"><span><u style="background:#7a4f00"></u>Paid '+peso(paid)+'</span><span><u style="background:#f5b800"></u>To pay '+peso(bills-paid)+'</span><span><u style="background:#f6a77a"></u>Left '+peso(Math.max(0,left))+'</span><span class="muted">10th: '+pct(c1.pct)+' left · 25th: '+pct(c2.pct)+' left</span></div></section>';
+  +'<div class="bar" role="img" aria-label="Month: '+pct(inc?paid/inc*100:0)+' paid, '+pct(Math.max(0,lp))+' left"><i style="width:'+wP+'%;background:var(--prid)"></i><i style="width:'+wU+'%;background:var(--pri)"></i><i style="width:'+wL+'%;background:var(--pink2)"></i></div>'
+  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(paid)+'</span><span><u style="background:var(--pri)"></u>To pay '+peso(bills-paid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,left))+'</span><span class="muted">10th: '+pct(c1.pct)+' left · 25th: '+pct(c2.pct)+' left</span></div></section>';
  const sorted=S.rems.slice().sort((a,b)=>a.t.localeCompare(b.t));
  const hrows=sorted.map(r=>{const c=el.filter(k=>(S.done[k]||{})[r.id]).length;const p=el.length?c/el.length*100:0;return '<div class="hb"><span class="n">'+esc(r.l)+'</span><span class="tr"><i style="width:'+p+'%"></i></span><span class="v">'+c+'/'+el.length+'</span></div>'}).join('');
  const tot=el.reduce((a,k)=>a+remStats(k).p,0);const hp=el.length?tot/el.length*100:0;
- const hcal=calGrid(ym,(k,d)=>{if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';const p=remStats(k).p;return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:rgba(245,184,0,'+(0.1+0.9*p)+');color:#2b2410" title="'+pct(p*100)+'"><small>'+d+'</small>'+(p>0?Math.round(p*100):'')+'</i>'});
+ const hcal=calGrid(ym,(k,d)=>{if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';const p=remStats(k).p;return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:rgba(var(--pri-rgb),'+(0.1+0.9*p)+');color:var(--ink)" title="'+pct(p*100)+'"><small>'+d+'</small>'+(p>0?Math.round(p*100):'')+'</i>'});
  const habits='<section class="card s6"><div class="ch"><h2>Daily reminders</h2><span class="chip">'+pct(hp)+' done this month</span></div>'+(hrows||'<div class="empty">No reminders.</div>')+'<div class="sec">Completion by day</div>'+hcal+'</section>';
  const ms=moodStats(all);
- const mcal=calGrid(ym,(k,d)=>{const s=moodStats([k]);if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';if(!s.n)return '<i class="cc'+(k===tk?' tdy':'')+'"><small>'+d+'</small></i>';const r=Math.round(s.avg);return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:'+MCOL[r]+';color:#2b2410" title="'+mword(s.avg)+' ('+s.avg.toFixed(1)+')"><small>'+d+'</small>'+MOODS[r].e+'</i>'});
+ const mcal=calGrid(ym,(k,d)=>{const s=moodStats([k]);if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';if(!s.n)return '<i class="cc'+(k===tk?' tdy':'')+'"><small>'+d+'</small></i>';const r=Math.round(s.avg);return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:'+MCOL[r]+';color:var(--ink)" title="'+mword(s.avg)+' ('+s.avg.toFixed(1)+')"><small>'+d+'</small>'+MOODS[r].e+'</i>'});
  const slotBars=SLOTS.map(([k,l,ic])=>{const s=ms.slot[k];const a=s.n?s.s/s.n:0;return '<div class="hb"><span class="n">'+ic+' '+l+'</span><span class="tr"><i style="width:'+(a/5*100)+'%"></i></span><span class="v">'+(s.n?a.toFixed(1):'·')+'</span></div>'}).join('');
  const dist=[5,4,3,2,1].filter(v=>ms.dist[v]).map(v=>MOODS[v].e+' '+ms.dist[v]).join('  ');
  const mood='<section class="card pink s6"><div class="ch"><h2>Mood this month</h2>'+(ms.n?'<span class="chip" style="background:#fff">'+memo(ms.avg)+' '+mword(ms.avg)+'</span>':'')+'</div>'+mcal+'<div class="sec">By time of day</div>'+slotBars+(dist?'<p class="sum">'+dist+'</p>':'')+'<p class="sum">'+esc(moodText(ms,el.length))+'</p></section>';
  let planned=0,did=0;
  el.forEach(k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()];if(!/rest/i.test(w.title))planned++;if(S.wdone[k])did++});
- const wcal=calGrid(ym,(k,d)=>{const done=!!S.wdone[k];return '<i class="cc'+(k===tk?' tdy':'')+(k>tk?' fut':'')+'" style="'+(done?'background:#f5b800;color:#2b2410':'background:#4d3e15;color:#eadcaa')+(k>tk?';background:transparent;border:1px dashed #6e5b22':'')+'"><small>'+d+'</small>'+(done?'✓':'')+'</i>'});
- const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:#4d3e15;color:#fff6dc">'+did+' done · '+planned+' planned so far</span></div>'+wcal+'</section>';
+ const wcal=calGrid(ym,(k,d)=>{const done=!!S.wdone[k];return '<i class="cc'+(k===tk?' tdy':'')+(k>tk?' fut':'')+'" style="'+(done?'background:var(--pri);color:var(--ink)':'background:var(--navy2);color:var(--navyt)')+(k>tk?';background:transparent;border:1px dashed var(--navy3)':'')+'"><small>'+d+'</small>'+(done?'✓':'')+'</i>'});
+ const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:var(--navy2);color:var(--navytx)">'+did+' done · '+planned+' planned so far</span></div>'+wcal+'</section>';
  const th=S.thoughts.filter(t=>t.d.slice(0,7)===ym).sort((a,b)=>b.ts-a.ts);
  const q=(document.getElementById('tq')||{}).value||'';
  const shown=th.filter(t=>t.x.toLowerCase().includes(q.toLowerCase())).slice(0,60);
@@ -628,6 +659,7 @@ function monthView(){
 }
 
 function render(){
+ applyTheme(S.theme);
  if(LOCKED){lockScreen();return}
  const keep={};document.querySelectorAll('[data-keep]').forEach(e=>{keep[e.dataset.keep]=e.value});
  const ae=document.activeElement,fk=ae&&ae.dataset?ae.dataset.keep:null;
@@ -641,8 +673,8 @@ function render(){
  document.getElementById('app').innerHTML=
   '<div class="top"><button class="logo" data-a="refresh" title="Refresh" aria-label="Refresh My Day">🌿 My Day</button><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
-  +'</div>'+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
-  +lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
+  +'</div>'+themeBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
+  +themePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
  document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!==undefined&&keep[e.dataset.keep]!==''||e.dataset.keep==='newRemT'&&keep.newRemT)e.value=keep[e.dataset.keep]});
  if(fk){const e=document.querySelector('[data-keep="'+fk+'"]');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
  const st=remStats(key(new Date()));
@@ -660,6 +692,8 @@ function addThought(){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');if(!t)return;
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
+ if(a==='thmenu'){THPANEL=!THPANEL;render();return}
+ if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
  if(a==='lk-open'){lkCheck($v('lk-pw')).then(ok=>{if(ok){LOCKED=false;render()}else{const m=document.getElementById('lk-msg');if(m)m.textContent='Wrong password.';const i=document.getElementById('lk-pw');if(i){i.value='';i.focus()}}});return}
  if(a==='lockmenu'){LKPANEL=!LKPANEL;LKNOTE='';LKOK=false;render();return}
