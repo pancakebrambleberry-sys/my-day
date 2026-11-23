@@ -5,6 +5,7 @@ Every improvement to pbb-day is listed here, newest first. Each entry says what 
 ## Nov 23, 2026
 
 ### Added
+- **Start over.** Open **Backup** and press "Sign out and go back to the welcome page". It asks you to confirm, then clears this device and shows the welcome page again. If you were signed in, you are signed out, and your data stays safe in your Google account, so signing in again brings it back. Without Google, it warns you to download a backup first.
 - **Try the welcome page again (preview link).** Opening the app with `#welcome` on the end of the link always shows the welcome page, even on a device that already has data. A yellow bar says it's a preview, nothing you type is saved or synced, and your own data is not touched. "Exit preview" goes back to the normal app.
 - **Water tracker.** A small card under Today's workout with eight glasses. Tap a glass to fill up to it, and tap the last filled glass to take one back. Each day starts at zero, and it works on any day you browse.
 - **Coming up.** A small card for things that happen on a certain date, like a dentist visit or a birthday. Type what it is, pick the date and press Add. Each item shows its date and has a tick box: tick it when it's done and it is crossed out, untick it to undo. Anything you haven't ticked stays in the list, and once its date has passed it turns red and says "overdue", so nothing gets forgotten. Items you ticked disappear the next day. It shows on every day you browse, three items at a time with a "+ more" button, and the add form opens only when you press "+ Add".

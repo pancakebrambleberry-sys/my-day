@@ -344,9 +344,11 @@ function backupPanel(){if(!BKPANEL)return '';
   +'<div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="exportTh">Export thoughts (spreadsheet)</button><button class="btn sm" data-a="bkdl">Download full backup</button></div>'
   +'<p style="margin:6px 0 4px">Restore from a backup file:</p><input id="bk-file" type="file" accept=".json,application/json" data-c="bkfile" aria-label="Backup file">'
   +(BKPEND?'<p style="margin:6px 0"><b>'+BKPEND.thoughts.length+'</b> thoughts and <b>'+BKPEND.rems.length+'</b> reminders found. Restoring replaces what is here now.</p><div class="row" style="margin-bottom:6px"><button class="btn sm" data-a="bkgo">Replace my data with this backup</button><button class="btn sm ghost" data-a="bkcancel">Cancel</button></div>':'')
+  +'<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:10px"><b>Start over</b>'
+  +(SOCONF?(AUTH.user?'<p style="margin:6px 0">You will be signed out and this device will be cleared, then you will see the welcome page. Your data stays safe in your Google account. Sign in again to get it back.</p>':'<p style="margin:6px 0"><b>This clears everything saved on this device</b> and takes you back to the welcome page. Download a full backup first if you want to keep it.</p>')+'<div class="row"><button class="btn sm" data-a="startover">Yes, start over</button><button class="btn sm ghost" data-a="so-cancel">Cancel</button></div>':'<p style="margin:6px 0">Go back to the welcome page'+(AUTH.user?' (this also signs you out).':'.')+'</p><button class="btn sm ghost" data-a="so-ask">Sign out and go back to the welcome page</button>')+'</div>'
   +'<div class="msg'+(BKNOTEOK?' ok':'')+'" role="alert">'+esc(BKNOTE)+'</div><div class="row"><button class="btn sm ghost" data-a="bkmenu">Close</button></div></div>'}
-let BKNOTEOK=false;
-function closePanels(){THPANEL=false;MNPANEL=false;LKPANEL=false;SHP=false;BKPANEL=false}
+let BKNOTEOK=false,SOCONF=false;
+function closePanels(){SOCONF=false;THPANEL=false;MNPANEL=false;LKPANEL=false;SHP=false;BKPANEL=false}
 function genCode(){const al='abcdefghjkmnpqrstuvwxyz23456789';const r=new Uint32Array(8);try{crypto.getRandomValues(r)}catch(_){for(let i=0;i<8;i++)r[i]=Math.random()*4e9}return Array.from(r).map(x=>al[x%al.length]).join('')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(THPANEL||MNPANEL||LKPANEL||SHP||BKPANEL)){closePanels();render()}});
 function shLink(){return S.share&&S.share.code?location.origin+location.pathname+'#v='+encodeURIComponent(S.share.code):''}
@@ -933,6 +935,9 @@ document.addEventListener('click',e=>{
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
  if(a==='exportTh'){if(!S.thoughts.length){BKNOTE='No thoughts to export yet.';BKNOTEOK=false;if(BKPANEL)render();return}dlFile('my-day-thoughts-'+stamp()+'.csv',thoughtsCsv(),'text/csv;charset=utf-8');BKNOTE='Exported '+S.thoughts.length+' thought'+(S.thoughts.length>1?'s':'')+' with date and time.';BKNOTEOK=true;if(BKPANEL)render();return}
  if(a==='bkdl'){dlFile('my-day-backup-'+stamp()+'.json',backupJson(),'application/json');BKNOTE='Backup downloaded.';BKNOTEOK=true;render();return}
+ if(a==='so-ask'){SOCONF=true;render();return}
+ if(a==='so-cancel'){SOCONF=false;render();return}
+ if(a==='startover'){const fin=()=>{try{localStorage.removeItem(STORE)}catch(_){}S=defaults();S.onb=false;ref=null;try{UNSUB&&UNSUB()}catch(_){}UNSUB=null;READONLY=false;closePanels();UI.date=mid(new Date());render()};if(AUTH.auth&&AUTH.user){AUTH.auth.signOut().then(fin,fin)}else fin();return}
  if(a==='bkmenu'){const o=!BKPANEL;closePanels();BKPANEL=o;BKNOTE='';BKPEND=null;render();return}
  if(a==='bkcancel'){BKPEND=null;BKNOTE='';render();return}
  if(a==='bkgo'){if(BKPEND){restoreApply(BKPEND);BKPEND=null;BKNOTE='Restored from your backup.';BKNOTEOK=true;render()}return}

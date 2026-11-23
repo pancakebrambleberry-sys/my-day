@@ -18,7 +18,7 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 | **Workout plan + streak** | A workout set for each weekday that shows up on its day. Mark it done and a monthly calendar fills in, with a weekly streak. |
 | **Water tracker** | Tap to log up to 8 glasses a day. |
 | **Coming up** | Add something for a future date. Tick it off when done; if you miss it, it stays and turns red as overdue. |
-| **First-time welcome** | New people answer a few quick questions (name, currency, paydays, salary) so they start with their own numbers. To try it again without touching your data, add `#welcome` to the link (preview only, nothing is saved). |
+| **First-time welcome** | New people answer a few quick questions (name, currency, paydays, salary) so they start with their own numbers. To try it again without touching your data, add `#welcome` to the link (preview only, nothing is saved). **Backup → Start over** signs out and returns to the welcome page. |
 | **Money tracker** | One or two paychecks a month, each with its own salary, bills and payday date (the 10th and 25th to start, change them any time). Pick your own currency symbol, and set the second payday to 0 if you are paid once a month. It shows the **% of your salary left after bills**. |
 | **Mood tracker** | Tap how you feel in the morning, afternoon and evening. It shows a summary for the day, week and month. |
 | **Thought dump** | Get things out of your head and find them later. An optional **Unhinged truth card** gives a playful, private summary of your day, week or month. It uses only your own words and runs in your browser. |
