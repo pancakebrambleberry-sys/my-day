@@ -162,6 +162,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .wm .k.half{border-color:#f5b800}.wm .k.on{background:#f5b800;border-color:#f5b800}
 .wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:#f5b800;line-height:1}
 .wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:#eadcaa}
+.stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}
 </style>
 </head>
 <body>
@@ -544,7 +545,7 @@ function dayView(){
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
- +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+workoutMonth(D)+moodCard(dk,isToday)+quoteCard()+timerCard()
+ +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
  +thoughtCard(dk)+'</div>';
