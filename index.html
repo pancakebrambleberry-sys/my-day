@@ -166,7 +166,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .wm .k.half{border-color:var(--pri)}.wm .k.on{background:var(--pri);border-color:var(--pri)}
 .wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:var(--pri);line-height:1}
 .wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:var(--navyt)}
-.mini{padding:12px 14px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
+.mini{padding:12px 14px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wfull{margin:2px 0 8px}.wfull b{display:block;font-size:15px;margin-bottom:3px}.wfull ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.45;columns:2;column-gap:14px;opacity:.9}.wfull li{break-inside:avoid;padding:0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
 .stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}.stack.cmp{align-self:start}.stack.cmp>.card{flex:none}
 .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
@@ -622,7 +622,7 @@ function workoutCard(D,dk,isToday){
  const w=S.workouts[dow]||{title:'Rest day',ex:''};
  const lines=w.ex.split('\n').map(x=>x.trim()).filter(Boolean);
  return '<section class="card navy mini"><div class="ch"><h2>'+(isToday?'Today’s workout':DOW[dow]+'’s workout')+'</h2><button class="btn sm light" data-a="editW" data-d="'+dow+'">Edit</button></div>'
- +(UI.editW===dow?workoutBlock(dow,dk):'<div class="wmini"><b>'+esc(w.title)+'</b>'+esc(lines.join(' · '))+'</div><div class="wrow"><button class="btn sm light" data-a="wdone" aria-pressed="'+done+'">'+(done?'✓ Done, nice!':'Mark as done')+'</button></div>')
+ +(UI.editW===dow?workoutBlock(dow,dk):'<div class="wfull"><b>'+esc(w.title)+'</b>'+(lines.length?'<ul>'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':'<span class="muted">Nothing planned.</span>')+'</div><div class="wrow"><button class="btn sm light" data-a="wdone" aria-pressed="'+done+'">'+(done?'✓ Done, nice!':'Mark as done')+'</button></div>')
  +'</section>';
 }
 
