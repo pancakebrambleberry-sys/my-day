@@ -15,7 +15,7 @@ Every improvement to pbb-day is listed here, newest first. Each entry says what 
 - **Paycheck settings.** Choose one or two paychecks a month, and set the payday dates yourself (set the second payday to 0 for none). Paydays on the 29th to 31st use the last day of shorter months.
 
 ### Changed
-- **Smaller workout card.** Today's workout now shows just the name, a one-line list of exercises and the Done button. Press Edit to see or change everything. It sits in the same space as Coming up, so the Day view is less crowded.
+- **Smaller workout card.** Today's workout now shows just the name, a one-line list of exercises and the Done button. Press Edit to see or change everything. It sits under Coming up in one column, and both cards are only as tall as their content, so the Day view is less crowded.
 - The default reminders are now general: Stretch, Drink 8 glasses of water and Workout.
 - Opening one top menu now closes the others. Esc closes them too.
 - The password lock accepts a password with or without a stray space, and phone keyboards no longer capitalize or auto-correct the box.
