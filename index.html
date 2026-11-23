@@ -576,7 +576,7 @@ function upcomingCard(){
  const rows=show.map(u=>{const x=new Date(+u.d.slice(0,4),+u.d.slice(5,7)-1,+u.d.slice(8,10),12);const w=upWhen(u.d);
   return '<div class="rem'+(w==='Today'?' due':'')+'" style="padding:3px 0;font-size:13px"><span class="rl">'+esc(u.l)+'</span><span class="tm">'+(w==='Today'?'today':shortDate(x))+'</span><button class="x" data-a="delUp" data-id="'+u.id+'" aria-label="Remove '+esc(u.l)+'">✕</button></div>'}).join('');
  const more=list.length>3?'<button class="btn sm ghost" style="padding:2px 8px;font-size:12px" data-a="upAll">'+(UI.upAll?'Show less':'+'+(list.length-3)+' more')+'</button>':'';
- const form=UI.upAdd?'<div class="addrow" style="margin-top:6px"><input class="in" data-keep="newUp" placeholder="What?" aria-label="Upcoming reminder"><input class="in" style="flex:0 0 130px" type="date" data-keep="newUpD" min="'+key(new Date())+'" aria-label="Date"><button class="btn sm" data-a="addUp">Add</button></div>':'';
+ const form=UI.upAdd?'<div class="addrow" style="margin-top:6px"><input class="in" data-keep="newUp" placeholder="What?" aria-label="Upcoming reminder"><input class="in" style="flex:0 0 130px" type="date" data-keep="newUpD" value="'+(key(UI.date)>=key(new Date())?key(UI.date):'')+'" min="'+key(new Date())+'" aria-label="Date"><button class="btn sm" data-a="addUp">Add</button></div>':'';
  return '<section class="card mini"><div class="ch" style="margin:0 0 4px"><h2 style="font-size:14px;margin:0">Coming up</h2><span>'+more+' <button class="btn sm light" style="padding:2px 9px;font-size:12px" data-a="upAdd">'+(UI.upAdd?'Close':'+ Add')+'</button></span></div>'
  +(rows||(UI.upAdd?'':'<div class="muted" style="font-size:12.5px">Nothing ahead.</div>'))+form+'</section>';
 }
@@ -746,7 +746,7 @@ function dayView(){
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
- +remindersCard(dk,isToday)+'<div class="s4 stack cmp">'+(isToday?upcomingCard():'')+workoutCard(D,dk,isToday)+'</div>'+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
+ +remindersCard(dk,isToday)+'<div class="s4 stack cmp">'+upcomingCard()+workoutCard(D,dk,isToday)+'</div>'+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+(single()?'':moneyPanel(ymKey(D),'25'))
  +truthCard(S.thoughts.filter(t=>t.d===dk),[dk],'day')+thoughtCard(dk)+'</div>';
