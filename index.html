@@ -394,19 +394,19 @@ function themePanel(){if(!THPANEL)return '';const cur=S.theme||'yellow';
 const LK='pbb-lock-v1';
 function lkGet(){try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(_){return null}}
 async function lkHash(pw,salt){const t=salt+'|'+pw;try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_){}let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'f'+h}
-async function lkCheck(pw){const l=lkGet();return !!l&&(await lkHash(pw,l.s))===l.h}
+async function lkCheck(pw){const l=lkGet();if(!l)return false;pw=pw==null?'':String(pw);const c=[pw,pw.trim(),pw+' '];for(const x of c){if(x&&(await lkHash(x,l.s))===l.h)return true}return false}
 let LOCKED=!!lkGet()&&!(()=>{try{const v=sessionStorage.getItem('pbb-unl');sessionStorage.removeItem('pbb-unl');return v==='1'}catch(_){return false}})(),LKPANEL=false,LKNOTE='',LKOK=false;
 const $v=id=>{const e=document.getElementById(id);return e?e.value:''};
 function lockBtn(){return '<button class="btn sm ghost" data-a="lockmenu">'+(lkGet()?'Password':'Set password')+'</button>'}
 function lockPanel(){if(!LKPANEL)return '';const has=!!lkGet();
  return '<div class="lkp"><h3>'+(has?'Change or remove password':'Set a password')+'</h3><p>Asked each time you open this page, on this device only. Pick something you will remember.</p>'
- +(has?'<input id="lkp-old" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password">':'')
- +'<input id="lkp-new" type="password" autocomplete="new-password" placeholder="'+(has?'New password':'Password')+' (4+ characters)" aria-label="New password">'
- +'<input id="lkp-new2" type="password" autocomplete="new-password" placeholder="Type it again" aria-label="Confirm password">'
+ +(has?'<input id="lkp-old" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Current password" aria-label="Current password">':'')
+ +'<input id="lkp-new" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="'+(has?'New password':'Password')+' (4+ characters)" aria-label="New password">'
+ +'<input id="lkp-new2" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type it again" aria-label="Confirm password">'
  +'<div class="msg'+(LKOK?' ok':'')+'" id="lkp-msg" role="alert">'+esc(LKNOTE)+'</div>'
  +'<div class="row"><button class="btn sm" data-a="lk-save">Save</button>'+(has?'<button class="btn sm ghost" data-a="lk-now">Lock now</button><button class="btn sm ghost" data-a="lk-remove">Remove password</button>':'')+'<button class="btn sm ghost" data-a="lockmenu">Close</button></div></div>'}
 function lockScreen(){document.title='pbb-day';
- document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter your password to open your day.</p><input id="lk-pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password"><div class="msg" id="lk-msg" role="alert"></div><button class="btn" data-a="lk-open">Open</button></div>';
+ document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter your password to open your day.</p><input id="lk-pw" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Password" aria-label="Password"><div class="msg" id="lk-msg" role="alert"></div><button class="btn" data-a="lk-open">Open</button></div>';
  const e=document.getElementById('lk-pw');if(e)try{e.focus()}catch(_){}}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='lk-pw'){const b=document.querySelector('[data-a="lk-open"]');if(b)b.click()}});
 
@@ -856,9 +856,9 @@ document.addEventListener('click',e=>{
   const has=!!lkGet();
   if(has&&!(await lkCheck($v('lkp-old')))){LKNOTE='Current password is wrong.';LKOK=false;render();return}
   if(a==='lk-remove'){try{localStorage.removeItem(LK)}catch(_){}LKNOTE='Password removed.';LKOK=true;render();return}
-  const n=$v('lkp-new');
+  const n=$v('lkp-new').trim();
   if(n.length<4){LKNOTE='Use at least 4 characters.';LKOK=false;render();return}
-  if(n!==$v('lkp-new2')){LKNOTE='The two passwords don’t match.';LKOK=false;render();return}
+  if(n!==$v('lkp-new2').trim()){LKNOTE='The two passwords don’t match.';LKOK=false;render();return}
   const salt=Math.random().toString(36).slice(2)+Date.now().toString(36);
   try{localStorage.setItem(LK,JSON.stringify({s:salt,h:await lkHash(n,salt)}))}catch(_){LKNOTE='Couldn’t save on this device.';LKOK=false;render();return}
   LKNOTE='Password saved. It will be asked next time you open the page.';LKOK=true;render()})();return}
