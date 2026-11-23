@@ -23,6 +23,7 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 | **Day, Week, Month** | See one day, the whole week, or the month at a glance. |
 | **9 colors** | Yellow, Orange, Red, Pink, Purple, Maroon, Blue, Green and Gray. |
 | **Password lock** | An optional password asked each time the page opens on that device. |
+| **Share (view-only)** | With sync on, give friends a code. They press **View with code** and can look but not change anything. Money and thoughts are hidden unless you include them. |
 | **Sync** | Optional Google sign-in saves your data to the cloud, so your phone and laptop match. |
 
 <p align="center">
@@ -126,6 +127,23 @@ To add your own color, find the `THEMES` list in `index.html`, copy one entry, g
 ## Password lock
 
 Press **Set password** to ask for a password each time the page opens on that device. It's a privacy screen, not strong security.
+
+## Sharing a view-only copy
+
+This needs Option 3 (Firebase). Sign in, press **Share**, pick a code (6+ characters) and choose whether to show money and thoughts. Friends open your link, press **View with code**, and type it. It is not remembered on their device, and they can't edit anything.
+
+Add this to your Firestore rules, next to the `users` rule, then press Publish:
+
+```
+match /shares/{id} {
+  allow get: if true;
+  allow create: if request.auth != null && request.resource.data.owner == request.auth.uid;
+  allow update: if request.auth != null && resource.data.owner == request.auth.uid && request.resource.data.owner == request.auth.uid;
+  allow delete: if request.auth != null && resource.data.owner == request.auth.uid;
+}
+```
+
+Note: anyone with the code can see what you chose to share, so use a code that is hard to guess. Press **Stop sharing** to turn it off.
 
 ## Tips
 

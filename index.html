@@ -170,6 +170,11 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
 .swb i{width:22px;height:22px;border-radius:50%;flex:none}.swb.on{border-color:var(--ink)}
+.robar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--navy);color:var(--navytx);border-radius:16px;padding:10px 16px;margin-bottom:14px;font-size:14px}
+.robar .btn{background:var(--navytx);color:var(--navy)}
+#app.ro button:disabled,#app.ro input:disabled,#app.ro textarea:disabled{cursor:default;opacity:1}
+#app.ro.nomoney [data-money],#app.ro.nomoney .money,#app.ro.noth [data-th]{display:none}
+.lkp label{display:flex;gap:8px;align-items:center;font-size:13.5px;margin:2px 0 6px}.lkp label input{width:auto;margin:0}
 </style>
 </head>
 <body>
@@ -210,12 +215,9 @@ const shortDate=d=>MON[d.getMonth()]+' '+d.getDate();
 function defaults(){return{
  v:1,updated:0,name:'',
  rems:[
-  {id:'r1',t:'06:30',l:'Pray'},
-  {id:'r2',t:'07:00',l:'Take morning meds'},
-  {id:'r3',t:'07:15',l:'Stretch'},
-  {id:'r4',t:'07:30',l:'Feed Bisky'},
-  {id:'r5',t:'08:30',l:'Triage inbox'},
-  {id:'r6',t:'18:00',l:'Feed Bisky (dinner)'}
+  {id:'r1',t:'07:00',l:'Stretch'},
+  {id:'r2',t:'09:00',l:'Drink 8 glasses of water'},
+  {id:'r3',t:'18:00',l:'Workout'}
  ],
  done:{},
  salary:{'10':30000,'25':30000},
@@ -255,7 +257,9 @@ if(migrate()&&S.updated){try{localStorage.setItem(STORE,JSON.stringify(S))}catch
 let ref=null,syncState='local',writing=false,pending=false,timer=null;
 function syncLabel(){return syncState==='signedout'?'Sign in to sync':syncState==='saved'?'✓ Synced to your Google account':syncState==='saving'?'Saving…':syncState==='error'?'⚠ Couldn’t sync, saved on this device':'Saved on this device'}
 function setSync(s){syncState=s;const el=document.getElementById('sync');if(el)el.textContent=syncLabel()}
+let READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
 function save(){
+ if(READONLY)return;
  S.updated=Date.now();
  try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}
  if(!ref)return;
@@ -265,7 +269,7 @@ async function push(){
  if(!ref)return;
  if(writing){pending=true;return}
  writing=true;
- try{await ref.set({json:JSON.stringify(S),updated:S.updated});setSync('saved')}catch(e){setSync('error')}
+ try{await ref.set({json:JSON.stringify(S),updated:S.updated});setSync('saved');shPush()}catch(e){setSync('error')}
  writing=false;
  if(pending){pending=false;push()}
 }
@@ -286,7 +290,7 @@ async function initCloud(){
  try{
   if(typeof firebase==='undefined'||!FIREBASE_CONFIG.apiKey||/PASTE/.test(FIREBASE_CONFIG.apiKey)){setSync('local');return}
   firebase.initializeApp(FIREBASE_CONFIG);
-  AUTH.enabled=true;AUTH.auth=firebase.auth();const fs=firebase.firestore();
+  AUTH.enabled=true;AUTH.auth=firebase.auth();const fs=firebase.firestore();AUTH.fs=fs;
   AUTH.auth.getRedirectResult().catch(()=>{});
   AUTH.auth.onAuthStateChanged(u=>{
    AUTH.user=u;
@@ -298,6 +302,39 @@ async function initCloud(){
 }
 function dispName(){return S.name||((AUTH.user&&AUTH.user.displayName)||'').slice(0,30)||'friend'}
 function commit(){save();render()}
+/* ---------- view-only sharing ---------- */
+async function shHash(code){const t='pbb-share|'+code.trim().toLowerCase();try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_){}let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'f'+h}
+function shSnap(){const sh=S.share||{};const c=JSON.parse(JSON.stringify(S));delete c.share;c.name=dispName();
+ for(const d in (c.mood||{}))for(const k in c.mood[d])if(c.mood[d][k]&&typeof c.mood[d][k]==='object')delete c.mood[d][k].n;
+ if(!sh.th)c.thoughts=[];
+ if(!sh.money){c.bills=[];c.salary={'10':0,'25':0};c.paid={};c.sampleBills=false}
+ c.hideMoney=!sh.money;c.hideTh=!sh.th;return c}
+async function shPush(){if(!S.share||!S.share.h||!AUTH.user||!AUTH.fs)return;
+ try{await AUTH.fs.collection('shares').doc(S.share.h).set({owner:AUTH.user.uid,updated:Date.now(),json:JSON.stringify(shSnap())})}catch(e){}}
+async function shDel(h){try{if(h&&AUTH.fs)await AUTH.fs.collection('shares').doc(h).delete()}catch(e){}}
+function shareBtn(){if(!AUTH.enabled)return '';return AUTH.user?'<button class="btn sm ghost" data-a="shmenu">Share</button>':'<button class="btn sm ghost" data-a="vwmenu">View with code</button>'}
+function sharePanel(){
+ if(SHP==='share'&&AUTH.user){const on=!!(S.share&&S.share.h);
+  return '<div class="lkp"><h3>Share a view-only copy</h3><p>'+(on?'Sharing is <b>on</b>. Friends see what is on your dashboard now, and it updates as you change things. They can’t edit anything.':'Give friends a code. They open your link, press <b>View with code</b>, and can look but not change anything.')+'</p>'
+  +'<input id="sh-code" type="text" autocomplete="off" placeholder="'+(on?'New code (leave empty to keep the same)':'Pick a code (6+ characters)')+'" aria-label="Share code">'
+  +'<label><input type="checkbox" id="sh-money"'+(S.share&&S.share.money?' checked':'')+'> Show money (salary and bills)</label>'
+  +'<label><input type="checkbox" id="sh-th"'+(S.share&&S.share.th?' checked':'')+'> Show thought dump</label>'
+  +'<div class="msg'+(SHOK?' ok':'')+'" id="sh-msg" role="alert">'+esc(SHNOTE)+'</div>'
+  +'<div class="row"><button class="btn sm" data-a="sh-save">'+(on?'Update':'Start sharing')+'</button>'+(on?'<button class="btn sm ghost" data-a="sh-stop">Stop sharing</button>':'')+'<button class="btn sm ghost" data-a="shmenu">Close</button></div></div>'}
+ if(SHP==='view'&&!AUTH.user){
+  return '<div class="lkp"><h3>View a shared dashboard</h3><p>Type the code you were given. You can only look. It isn’t remembered, so you’ll be asked again next time.</p>'
+  +'<input id="vw-code" type="text" autocomplete="off" placeholder="Code" aria-label="Code">'
+  +'<div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div>'
+  +'<div class="row"><button class="btn sm" data-a="vw-open">Open</button><button class="btn sm ghost" data-a="vwmenu">Close</button></div></div>'}
+ return ''}
+const ROK=new Set(['view','nav','ro-exit','refresh']);
+function roLock(){const app=document.getElementById('app');if(!app)return;
+ app.classList.toggle('ro',READONLY);app.classList.toggle('nomoney',READONLY&&!!S.hideMoney);app.classList.toggle('noth',READONLY&&!!S.hideTh);
+ if(!READONLY)return;
+ app.insertAdjacentHTML('afterbegin','<div class="robar"><span>Viewing a shared dashboard. Read-only.</span><button class="btn sm" data-a="ro-exit">Exit</button></div>');
+ app.querySelectorAll('input,textarea,select').forEach(e=>{e.disabled=true});
+ app.querySelectorAll('[data-a]').forEach(b=>{if(!ROK.has(b.dataset.a))b.disabled=true})}
+function vwExit(note){if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}if(READONLY){READONLY=false;if(SAVEDS)S=SAVEDS;SAVEDS=null}SHNOTE=note||'';render()}
 /* ---------- color themes ---------- */
 const THEMES={
  yellow:{n:'Yellow',bg:'#fff8dc',lav:'#ffe58a',lav2:'#fff1c2',pink:'#ffe0b2',pink2:'#f5a65b',ink:'#2b2410',mute:'#6b5a2e',pri:'#f5b800',prih:'#ffc933',prid:'#7a4f00',fill:'#e0a100',navy:'#3b2f0b',navy2:'#4d3e15',navy3:'#6e5b22',navyt:'#eadcaa',navytx:'#fff6dc',line:'#f0e2a8'},
@@ -369,7 +406,7 @@ const QUOTES=[
  'Gentle consistency wins.',
  'What you do daily matters more than what you do once in a while.',
  'Ang maliit na hakbang ay hakbang pa rin.',
- 'Bisky believes in you. 🐾',
+ 'You’re doing better than you think.',
  'Finish one thing, then celebrate it.',
  'Money follows a plan, and you’ve made one.'
 ];
@@ -549,7 +586,7 @@ function moneyPanel(ym,which,cls){
  +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="₱ amt" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
 }
 function sampleNote(){
- return S.sampleBills?'<div class="s12 note-sample"><span>These bills are <b>samples</b>. Edit the names and amounts, or clear them and add your own.</span><button class="btn sm" data-a="clearBills">Clear sample bills</button></div>':'';
+ return S.sampleBills?'<div class="s12 note-sample" data-money="1"><span>These bills are <b>samples</b>. Edit the names and amounts, or clear them and add your own.</span><button class="btn sm" data-a="clearBills">Clear sample bills</button></div>':'';
 }
 
 function thoughtsList(items,showDate){
@@ -559,7 +596,7 @@ function thoughtsList(items,showDate){
 function thoughtCard(dk){
  const today=S.thoughts.filter(t=>t.d===dk).sort((a,b)=>b.ts-a.ts);
  const earlier=S.thoughts.filter(t=>t.d<dk).sort((a,b)=>b.ts-a.ts).slice(0,5);
- return '<section class="card s12"><div class="ch"><h2>Thought dump</h2><span class="muted" style="font-size:13px">Get it out of your head. Ctrl/⌘+Enter to add.</span></div>'
+ return '<section class="card s12" data-th="1"><div class="ch"><h2>Thought dump</h2><span class="muted" style="font-size:13px">Get it out of your head. Ctrl/⌘+Enter to add.</span></div>'
  +'<textarea class="in" data-keep="thought" id="thought" placeholder="What’s on your mind?" aria-label="New thought"></textarea><div class="addrow"><button class="btn" data-a="addThought">Add thought</button></div>'
  +'<div class="sec">This day</div>'+thoughtsList(today)
  +(earlier.length?'<div class="sec">Earlier</div>'+thoughtsList(earlier,true):'')+'</section>';
@@ -580,7 +617,7 @@ function dayView(){
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
- +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
+ +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
  +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
@@ -614,7 +651,7 @@ function weekView(){
  const[pym,pw]=periodFor(days[6]>mid(new Date())?mid(new Date()):days[6]);
  const money=moneyPanel(pym,pw,'s5');
  const th=S.thoughts.filter(t=>t.d>=keys[0]&&t.d<=keys[6]).sort((a,b)=>b.ts-a.ts);
- const thoughts='<section class="card s12"><div class="ch"><h2>Thoughts this week</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div>'+thoughtsList(th,true)+'</section>';
+ const thoughts='<section class="card s12" data-th="1"><div class="ch"><h2>Thoughts this week</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div>'+thoughtsList(th,true)+'</section>';
  return '<div class="grid">'+habits+workouts+mood+sampleNote()+money+thoughts+'</div>';
 }
 
@@ -634,7 +671,7 @@ function monthView(){
  const c1=calc(ym,'10'),c2=calc(ym,'25');
  const inc=c1.sal+c2.sal,bills=c1.total+c2.total,paid=c1.paid+c2.paid,left=inc-bills,lp=inc?left/inc*100:0;
  const wP=inc?Math.min(100,paid/inc*100):0,wU=inc?Math.max(0,Math.min(100-wP,(bills-paid)/inc*100)):0,wL=Math.max(0,100-wP-wU);
- const sum='<section class="card s12"><div class="ch"><h2>Money this month</h2><span class="muted">Each paycheck is tracked separately below</span></div><div class="big"><b class="'+(left<0?'neg':'')+'">'+pct(lp)+'</b><span>'+(left<0?'over budget by '+peso(-left):'of the month’s pay left after all bills')+' <span class="muted">· '+peso(left)+' of '+peso(inc)+'</span></span></div>'
+ const sum='<section class="card s12" data-money="1"><div class="ch"><h2>Money this month</h2><span class="muted">Each paycheck is tracked separately below</span></div><div class="big"><b class="'+(left<0?'neg':'')+'">'+pct(lp)+'</b><span>'+(left<0?'over budget by '+peso(-left):'of the month’s pay left after all bills')+' <span class="muted">· '+peso(left)+' of '+peso(inc)+'</span></span></div>'
   +'<div class="bar" role="img" aria-label="Month: '+pct(inc?paid/inc*100:0)+' paid, '+pct(Math.max(0,lp))+' left"><i style="width:'+wP+'%;background:var(--prid)"></i><i style="width:'+wU+'%;background:var(--pri)"></i><i style="width:'+wL+'%;background:var(--pink2)"></i></div>'
   +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(paid)+'</span><span><u style="background:var(--pri)"></u>To pay '+peso(bills-paid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,left))+'</span><span class="muted">10th: '+pct(c1.pct)+' left · 25th: '+pct(c2.pct)+' left</span></div></section>';
  const sorted=S.rems.slice().sort((a,b)=>a.t.localeCompare(b.t));
@@ -654,7 +691,7 @@ function monthView(){
  const th=S.thoughts.filter(t=>t.d.slice(0,7)===ym).sort((a,b)=>b.ts-a.ts);
  const q=(document.getElementById('tq')||{}).value||'';
  const shown=th.filter(t=>t.x.toLowerCase().includes(q.toLowerCase())).slice(0,60);
- const thoughts='<section class="card s7"><div class="ch"><h2>Thoughts this month</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div><input class="in" id="tq" data-keep="tq" placeholder="Search thoughts…" aria-label="Search thoughts" style="margin-bottom:6px">'+thoughtsList(shown,true)+'</section>';
+ const thoughts='<section class="card s7" data-th="1"><div class="ch"><h2>Thoughts this month</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div><input class="in" id="tq" data-keep="tq" placeholder="Search thoughts…" aria-label="Search thoughts" style="margin-bottom:6px">'+thoughtsList(shown,true)+'</section>';
  return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+moneyPanel(ym,'25')+habits+mood+workouts+thoughts+'</div>';
 }
 
@@ -673,12 +710,13 @@ function render(){
  document.getElementById('app').innerHTML=
   '<div class="top"><button class="logo" data-a="refresh" title="Refresh" aria-label="Refresh My Day">🌿 My Day</button><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
-  +'</div>'+themeBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
-  +themePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
+  +'</div>'+themeBtn()+shareBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
+  +themePanel()+sharePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
  document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!==undefined&&keep[e.dataset.keep]!==''||e.dataset.keep==='newRemT'&&keep.newRemT)e.value=keep[e.dataset.keep]});
  if(fk){const e=document.querySelector('[data-keep="'+fk+'"]');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
  const st=remStats(key(new Date()));
  document.title=(st.n-st.c>0?'('+(st.n-st.c)+') ':'')+'pbb-day';
+ roLock();
 }
 
 /* ---------- events ---------- */
@@ -692,6 +730,29 @@ function addThought(){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');if(!t)return;
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
+ if(READONLY&&!ROK.has(a))return;
+ if(a==='ro-exit'){vwExit();return}
+ if(a==='shmenu'){SHP=SHP==='share'?false:'share';SHNOTE='';SHOK=false;render();return}
+ if(a==='vwmenu'){SHP=SHP==='view'?false:'view';SHNOTE='';render();return}
+ if(a==='sh-save'){(async()=>{
+  const code=val('sh-code').trim(),money=!!(document.getElementById('sh-money')||{}).checked,th=!!(document.getElementById('sh-th')||{}).checked;
+  const had=S.share&&S.share.h;
+  if((!had||code)&&code.length<6){SHNOTE='Pick a code with at least 6 characters.';SHOK=false;render();return}
+  let h=had;if(code){h=await shHash(code);if(had&&had!==h)await shDel(had)}
+  S.share={h,money,th};commit();await shPush();
+  SHNOTE=code?'Sharing is on. Give friends the code exactly as you typed it.':'Updated.';SHOK=true;render()})();return}
+ if(a==='sh-stop'){(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
+ if(a==='vw-open'){(async()=>{
+  const code=val('vw-code').trim();if(!code){SHNOTE='Type the code first.';render();return}
+  if(!AUTH.fs){SHNOTE='Not available right now.';render();return}
+  const h=await shHash(code);let first=true;
+  if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}
+  UNSUB=AUTH.fs.collection('shares').doc(h).onSnapshot(snap=>{
+   if(!snap.exists){if(first){first=false;SHNOTE='That code didn’t work.';if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}render()}else vwExit('The owner stopped sharing.');return}
+   try{const d=snap.data()||{};const ns=Object.assign(defaults(),JSON.parse(d.json));
+    if(!READONLY){SAVEDS=S;READONLY=true;UI.date=mid(new Date());UI.view='day';SHP=false}
+    S=ns;SHNOTE='';first=false;render()}catch(e){SHNOTE='Couldn’t open it.';render()}
+  },err=>{SHNOTE=/permission/i.test((err&&err.code)||'')?'Sharing isn’t switched on yet.':'Couldn’t open it.';first=false;render()})})();return}
  if(a==='thmenu'){THPANEL=!THPANEL;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
