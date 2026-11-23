@@ -316,9 +316,29 @@ async function shPush(){if(!S.share||!S.share.h||!AUTH.user||!AUTH.fs)return;
  try{await AUTH.fs.collection('shares').doc(S.share.h).set({owner:AUTH.user.uid,updated:Date.now(),json:JSON.stringify(shSnap())})}catch(e){}}
 async function shDel(h){try{if(h&&AUTH.fs)await AUTH.fs.collection('shares').doc(h).delete()}catch(e){}}
 function shareBtn(){if(!AUTH.enabled)return '';return AUTH.user?'<button class="btn sm ghost" data-a="shmenu">Share</button>':'<button class="btn sm ghost" data-a="vwmenu">View with code</button>'}
-function closePanels(){THPANEL=false;MNPANEL=false;LKPANEL=false;SHP=false}
+
+/* ---------- export / backup ---------- */
+function dlFile(name,text,mime){const b=new Blob([text],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{try{URL.revokeObjectURL(u)}catch(_){}a.remove()},1500)}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
+function thoughtsCsv(){const rows=S.thoughts.slice().sort((a,b)=>a.ts-b.ts);
+ return '﻿'+['Date,Time,Thought'].concat(rows.map(t=>{const d=new Date(t.ts);return [t.d,d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),t.x].map(csvCell).join(',')})).join('\r\n')+'\r\n'}
+function backupJson(){const c=JSON.parse(JSON.stringify(S));delete c.share;return JSON.stringify({app:'pbb-day',exported:new Date().toISOString(),data:c},null,1)}
+function stamp(){return key(new Date())}
+function restoreParse(text){let o;try{o=JSON.parse(text)}catch(_){return null}
+ const d=o&&o.app==='pbb-day'&&o.data?o.data:o;
+ if(!d||typeof d!=='object'||!Array.isArray(d.rems)||!Array.isArray(d.thoughts))return null;return d}
+function restoreApply(d){const keep=S.share;S=Object.assign(defaults(),d);delete S.share;if(keep)S.share=keep;if(!S.pay)S.pay={'10':10,'25':25};try{migrate()}catch(_){}commit()}
+function backupBtn(){return '<button class="btn sm ghost" data-a="bkmenu">Backup</button>'}
+function backupPanel(){if(!BKPANEL)return '';
+ return '<div class="lkp"><h3>Backup and export</h3><p>Save a copy of your data on this device. It is plain text, so it stays small.</p>'
+  +'<div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="exportTh">Export thoughts (spreadsheet)</button><button class="btn sm" data-a="bkdl">Download full backup</button></div>'
+  +'<p style="margin:6px 0 4px">Restore from a backup file:</p><input id="bk-file" type="file" accept=".json,application/json" data-c="bkfile" aria-label="Backup file">'
+  +(BKPEND?'<p style="margin:6px 0"><b>'+BKPEND.thoughts.length+'</b> thoughts and <b>'+BKPEND.rems.length+'</b> reminders found. Restoring replaces what is here now.</p><div class="row" style="margin-bottom:6px"><button class="btn sm" data-a="bkgo">Replace my data with this backup</button><button class="btn sm ghost" data-a="bkcancel">Cancel</button></div>':'')
+  +'<div class="msg'+(BKNOTEOK?' ok':'')+'" role="alert">'+esc(BKNOTE)+'</div><div class="row"><button class="btn sm ghost" data-a="bkmenu">Close</button></div></div>'}
+let BKNOTEOK=false;
+function closePanels(){THPANEL=false;MNPANEL=false;LKPANEL=false;SHP=false;BKPANEL=false}
 function genCode(){const al='abcdefghjkmnpqrstuvwxyz23456789';const r=new Uint32Array(8);try{crypto.getRandomValues(r)}catch(_){for(let i=0;i<8;i++)r[i]=Math.random()*4e9}return Array.from(r).map(x=>al[x%al.length]).join('')}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(THPANEL||MNPANEL||LKPANEL||SHP)){closePanels();render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(THPANEL||MNPANEL||LKPANEL||SHP||BKPANEL)){closePanels();render()}});
 function shLink(){return S.share&&S.share.code?location.origin+location.pathname+'#v='+encodeURIComponent(S.share.code):''}
 function sharePanel(){
  if(SHP==='share'&&AUTH.user){const on=!!(S.share&&S.share.h);
@@ -374,7 +394,7 @@ function applyTheme(name){
  try{const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.bg);
   const ic=document.querySelector('link[rel=icon]');if(ic)ic.setAttribute('href','data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='"+t.pri+"'/><circle cx='32' cy='32' r='11' fill='"+t.bg+"'/><g stroke='"+t.bg+"' stroke-width='5' stroke-linecap='round'><path d='M32 8v7M32 49v7M8 32h7M49 32h7M15 15l5 5M44 44l5 5M49 15l-5 5M20 44l-5 5'/></g></svg>"))}catch(_){}
 }
-let THPANEL=false,MNPANEL=false;
+let THPANEL=false,MNPANEL=false,BKPANEL=false,BKNOTE='',BKPEND=null;
 const CURS=['₱','$','€','£','¥','₹','₩','RM'];
 function moneyBtn(){return '<button class="btn sm ghost" data-a="mnmenu">Paycheck</button>'}
 function moneyPanelSet(){if(!MNPANEL)return '';
@@ -687,7 +707,7 @@ function thoughtCard(dk){
  const today=S.thoughts.filter(t=>t.d===dk).sort((a,b)=>b.ts-a.ts);
  const earlier=S.thoughts.filter(t=>t.d<dk).sort((a,b)=>b.ts-a.ts).slice(0,5);
  return '<section class="card s12" data-th="1"><div class="ch"><h2>Thought dump</h2><span class="muted" style="font-size:13px">Get it out of your head. Ctrl/⌘+Enter to add.</span></div>'
- +'<textarea class="in" data-keep="thought" id="thought" placeholder="What’s on your mind?" aria-label="New thought"></textarea><div class="addrow"><button class="btn" data-a="addThought">Add thought</button></div>'
+ +'<textarea class="in" data-keep="thought" id="thought" placeholder="What’s on your mind?" aria-label="New thought"></textarea><div class="addrow"><button class="btn" data-a="addThought">Add thought</button><button class="btn ghost" data-a="exportTh">Export thoughts</button></div>'
  +'<div class="sec">This day</div>'+thoughtsList(today)
  +(earlier.length?'<div class="sec">Earlier</div>'+thoughtsList(earlier,true):'')+'</section>';
 }
@@ -806,8 +826,8 @@ function render(){
  document.getElementById('app').innerHTML=
   '<div class="top"><button class="logo" data-a="refresh" title="Refresh" aria-label="Refresh My Day">🌿 My Day</button><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
-  +'</div>'+themeBtn()+moneyBtn()+shareBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
-  +themePanel()+moneyPanelSet()+sharePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
+  +'</div>'+themeBtn()+moneyBtn()+backupBtn()+shareBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
+  +themePanel()+moneyPanelSet()+backupPanel()+sharePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
  document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!==undefined&&keep[e.dataset.keep]!==''||e.dataset.keep==='newRemT'&&keep.newRemT)e.value=keep[e.dataset.keep]});
  if(fk){const e=document.querySelector('[data-keep="'+fk+'"]');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
  const st=remStats(key(new Date()));
@@ -845,6 +865,11 @@ document.addEventListener('click',e=>{
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
+ if(a==='exportTh'){if(!S.thoughts.length){BKNOTE='No thoughts to export yet.';BKNOTEOK=false;if(BKPANEL)render();return}dlFile('my-day-thoughts-'+stamp()+'.csv',thoughtsCsv(),'text/csv;charset=utf-8');BKNOTE='Exported '+S.thoughts.length+' thought'+(S.thoughts.length>1?'s':'')+' with date and time.';BKNOTEOK=true;if(BKPANEL)render();return}
+ if(a==='bkdl'){dlFile('my-day-backup-'+stamp()+'.json',backupJson(),'application/json');BKNOTE='Backup downloaded.';BKNOTEOK=true;render();return}
+ if(a==='bkmenu'){const o=!BKPANEL;closePanels();BKPANEL=o;BKNOTE='';BKPEND=null;render();return}
+ if(a==='bkcancel'){BKPEND=null;BKNOTE='';render();return}
+ if(a==='bkgo'){if(BKPEND){restoreApply(BKPEND);BKPEND=null;BKNOTE='Restored from your backup.';BKNOTEOK=true;render()}return}
  if(a==='mnmenu'){const o=!MNPANEL;closePanels();MNPANEL=o;render();return}
  if(a==='thmenu'){const o=!THPANEL;closePanels();THPANEL=o;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
@@ -889,6 +914,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
  const t=e.target.closest('[data-c]');if(!t)return;
  const c=t.dataset.c,id=t.dataset.id,dk=key(UI.date);
+ if(c==='bkfile'){const f=t.files&&t.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const d=restoreParse(String(r.result));if(d){BKPEND=d;BKNOTE='';BKNOTEOK=false}else{BKPEND=null;BKNOTE='That file is not a My Day backup.';BKNOTEOK=false}render()};r.onerror=()=>{BKNOTE='Could not read that file.';render()};r.readAsText(f);return}
  if(c==='name'){S.name=t.value.trim().slice(0,30);commit();return}
  if(c==='remL'){const r=S.rems.find(r=>r.id===id);if(r&&t.value.trim()){r.l=t.value.trim();save()}return}
  if(c==='remT'){const r=S.rems.find(r=>r.id===id);if(r&&t.value){r.t=t.value;commit()}return}

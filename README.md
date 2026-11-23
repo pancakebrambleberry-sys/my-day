@@ -24,6 +24,7 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 | **9 colors** | Yellow, Orange, Red, Pink, Purple, Maroon, Blue, Green and Gray. |
 | **Password lock** | An optional password asked each time the page opens on that device. |
 | **Share (view-only)** | With sync on, give friends a code. They press **View with code** and can look but not change anything. Money and thoughts are hidden unless you include them. |
+| **Export and backup** | Download your thoughts as a spreadsheet file with the date and time of each one, or save a full backup file and restore it later. |
 | **Sync** | Optional Google sign-in saves your data to the cloud, so your phone and laptop match. |
 
 <p align="center">
