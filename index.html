@@ -294,7 +294,7 @@ async function initCloud(){
   AUTH.auth.getRedirectResult().catch(()=>{});
   AUTH.auth.onAuthStateChanged(u=>{
    AUTH.user=u;
-   if(!u){ref=null;setSync('signedout');render();const m=/[#&]v=([^&]+)/.exec(location.hash||'');if(!m&&/[#&]view(&|$)/.test(location.hash||'')&&!READONLY){SHP='view';render()}if(m&&!READONLY){try{vwOpen(decodeURIComponent(m[1]))}catch(_){}}return}
+   if(!u){ref=null;setSync('signedout');render();const m=/[#&]v=([^&]+)/.exec(location.hash||'');if(m&&!READONLY){try{vwOpen(decodeURIComponent(m[1]))}catch(_){}}return}
    attach(fs.collection('users').doc(u.uid).collection('data').doc('state')).catch(()=>{ref=null;setSync('error');render()});
   });
   setSync('signedout');render();
@@ -705,8 +705,14 @@ function monthView(){
  return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+moneyPanel(ym,'25')+habits+mood+workouts+thoughts+'</div>';
 }
 
+function gateScreen(){document.title='pbb-day';
+ const had=document.getElementById('vw-code');const v=had?had.value:'';
+ document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter the code you were given to see this dashboard. You can only look.</p><input id="vw-code" type="text" autocomplete="off" autocapitalize="none" placeholder="Code" aria-label="Code"><div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div><button class="btn" data-a="vw-open">Open</button></div>';
+ const e=document.getElementById('vw-code');if(e){e.value=v;if(!had)try{e.focus()}catch(_){}}}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='vw-code'){const b=document.querySelector('[data-a="vw-open"]');if(b)b.click()}});
 function render(){
  applyTheme(S.theme);
+ if(!READONLY&&AUTH.enabled&&!AUTH.user&&/[#&]view(&|$)/.test(location.hash||'')&&!/[#&]v=/.test(location.hash||'')){gateScreen();return}
  if(LOCKED){lockScreen();return}
  const keep={};document.querySelectorAll('[data-keep]').forEach(e=>{keep[e.dataset.keep]=e.value});
  const ae=document.activeElement,fk=ae&&ae.dataset?ae.dataset.keep:null;
