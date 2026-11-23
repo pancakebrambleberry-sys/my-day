@@ -154,6 +154,10 @@ match /shares/{id} {
 
 Note: anyone with the code can see what you chose to share, so use a code that is hard to guess. Press **Stop sharing** to turn it off.
 
+## What's new
+
+See [CHANGELOG.md](CHANGELOG.md) for every update that has been made.
+
 ## Tips
 
 - On iPhone: open the page in Safari, then Share → **Add to Home Screen**.
