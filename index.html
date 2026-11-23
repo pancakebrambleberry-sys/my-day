@@ -169,6 +169,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .mini{padding:12px 14px}.mini .rem.due .rl{color:var(--bad);font-weight:600}.mini .ck{width:22px;height:22px;border-radius:7px;font-size:13px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wfull{margin:2px 0 8px}.wfull b{display:block;font-size:15px;margin-bottom:3px}.wfull ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.45;columns:2;column-gap:14px;opacity:.9}.wfull li{break-inside:avoid;padding:0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
 .gls{display:flex;gap:5px;margin:2px 0 4px}.gl{flex:1;height:30px;border:2px solid var(--line2);background:#fff;border-radius:5px 5px 11px 11px;padding:0;cursor:pointer}.gl.on{background:#7fc4e8;border-color:#4fa3d1}.gl:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .rc{display:grid;grid-template-columns:104px 1fr;gap:7px 12px;font-size:14px;align-items:baseline}.rc>b{font-weight:600}.rc .d{color:var(--mute);font-size:12.5px}@media(max-width:680px){.rc{grid-template-columns:1fr;gap:1px}.rc>b{margin-top:8px}}
+.offctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}.stack.cmp{align-self:start}@media(min-width:681px) and (max-width:1000px){.hello,.tiles{order:-3}.rmc{order:-2}.mdc{order:-1}.stack.cmp{grid-column:span 12;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}}.stack.cmp>.card{flex:none}
 .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
@@ -226,6 +227,7 @@ function defaults(){return{
  ],
  done:{},
  up:[],
+ off:{},
  water:{},
  salary:{'10':30000,'25':30000},
  pay:{'10':10,'25':25},pays:2,cur:'₱',
@@ -568,7 +570,7 @@ function remindersCard(dk,isToday){
  if(UI.editRem){
   rows=list.map(r=>'<div class="rem"><input class="in" data-c="remL" data-id="'+r.id+'" value="'+esc(r.l)+'" aria-label="Reminder name"><input class="in" style="width:112px" type="time" data-c="remT" data-id="'+r.id+'" value="'+r.t+'" aria-label="Time"><button class="x" data-a="delRem" data-id="'+r.id+'" aria-label="Delete '+esc(r.l)+'">✕</button></div>').join('');
  }else{
-  rows=list.map(r=>{const d=!!dn[r.id];const due=isToday&&!d&&r.t<=now;
+  rows=list.map(r=>{const d=!!dn[r.id];const due=isToday&&!d&&r.t<=now&&!offK(dk);
    return '<div class="rem'+(d?' done':'')+(due?' due':'')+'">'+ckBtn(d,'data-a="rem" data-id="'+r.id+'"','Mark '+r.l+' done')+'<span class="rl">'+esc(r.l)+'</span><span class="tm">'+(due?'due · ':'')+ft(r.t)+'</span></div>'}).join('');
  }
  if(!list.length)rows='<div class="empty">No reminders yet. Add one below.</div>';
@@ -605,17 +607,20 @@ function workoutBlock(dow,dk,compact){
  const lines=w.ex.split('\n').map(s=>s.trim()).filter(Boolean);
  return '<div class="wt">'+esc(w.title)+'</div>'+(lines.length?'<ul class="wl">'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':'<p class="muted">Nothing planned.</p>');
 }
+const OFFL={rest:'Rest day',sick:'Sick day'};
+const offK=k=>(S.off&&S.off[k])||'';
+function offCtl(dk){const v=offK(dk);return '<div class="offctl">'+(v?'<span class="chip">'+OFFL[v]+'</span> <span class="muted" style="font-size:13px">Not counted against your streaks or recap.</span> <button class="btn sm ghost" data-a="off" data-v="'+v+'">Undo</button>':'<button class="btn sm ghost" data-a="off" data-v="rest">Rest day</button><button class="btn sm ghost" data-a="off" data-v="sick">Sick day</button>')+'</div>'}
 function wkInfo(mon){
  const tk=key(new Date());const days=Array.from({length:7},(_,i)=>key(addDays(mon,i)));
  const rest=k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()]||{title:'Rest day'};return /rest/i.test(w.title)};
- const plan=days.filter(k=>!rest(k)),due=plan.filter(k=>k<=tk);
+ const plan=days.filter(k=>!rest(k)&&!offK(k)),due=plan.filter(k=>k<=tk);
  const did=days.filter(k=>S.wdone[k]).length;
  const need=Math.max(1,Math.min(3,plan.length));
- const hit=did>=need;return{hit,did,full:hit&&did>=plan.length}
+ const hit=did>=need;return{hit,did,full:hit&&did>=plan.length,skip:!plan.length}
 }
 function wkStreak(){
  let m=weekDates(new Date())[0],n=0,act=0;const cur=wkInfo(m);if(cur.hit){n++;act+=cur.did}
- for(let i=0;i<260;i++){m=addDays(m,-7);const w=wkInfo(m);if(w.hit){n++;act+=w.did}else break}
+ for(let i=0;i<260;i++){m=addDays(m,-7);const w=wkInfo(m);if(w.hit){n++;act+=w.did}else if(w.skip)continue;else break}
  return{n,act}
 }
 function workoutMonth(D){
@@ -754,13 +759,13 @@ function dayView(){
  const w=S.workouts[D.getDay()];const np=nextPayday();const nd=daysUntil(np);
  const bits=[];
  if(isToday){
-  bits.push(st.n-st.c>0?(st.n-st.c)+' reminder'+(st.n-st.c>1?'s':'')+' left today.':'All reminders done 🎉.');
+  if(offK(dk))bits.push(OFFL[offK(dk)]+'. Nothing counts against you today.');else bits.push(st.n-st.c>0?(st.n-st.c)+' reminder'+(st.n-st.c>1?'s':'')+' left today.':'All reminders done 🎉.');
   {const t1=key(new Date()),tu=upList().filter(u=>!u.x&&u.d===t1),od=upList().filter(u=>!u.x&&u.d<t1);if(tu.length)bits.push('Today: '+tu.map(u=>u.l).join(', ')+'.');if(od.length)bits.push(od.length+' overdue in Coming up.')}
   bits.push('Workout: '+w.title+'.');
   bits.push('Next payday is '+DOW[np.getDay()]+', '+shortDate(np)+' ('+(nd===0?'today':'in '+nd+' day'+(nd>1?'s':''))+').');
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
- return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
+ return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p>'+offCtl(dk)+'</div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
  +remindersCard(dk,isToday)+'<div class="s4 stack cmp">'+upcomingCard()+workoutCard(D,dk,isToday)+waterCard(dk)+'</div>'+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
@@ -774,18 +779,18 @@ function weekDates(D){const dow=(D.getDay()+6)%7;const s=addDays(D,-dow);return 
 const kDate=k=>new Date(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10),12);
 const kDow=k=>DOW[kDate(k).getDay()];
 function rcStats(keys){
- const tk=key(new Date());const el=keys.filter(k=>k<=tk);
- const o={days:el.length,rem:null,best:null,weak:null,wDid:0,wPlan:0,wat:null,mood:moodStats(el)};
- if(!el.length)return o;
- if(S.rems.length){
+ const tk=key(new Date());const el0=keys.filter(k=>k<=tk),el=el0.filter(k=>!offK(k));
+ const o={off:el0.length-el.length,days:el.length,rem:null,best:null,weak:null,wDid:0,wPlan:0,wat:null,mood:moodStats(el0)};
+ if(!el0.length)return o;
+ if(el.length&&S.rems.length){
   const ps=el.map(k=>({k,p:remStats(k).p}));
   o.rem=ps.reduce((a,x)=>a+x.p,0)/el.length*100;
   let b=ps[0];ps.forEach(x=>{if(x.p>b.p)b=x});if(b.p>0)o.best=b;
   if(S.rems.length>1){const cs=S.rems.map(r=>({l:r.l,c:el.filter(k=>(S.done[k]||{})[r.id]).length})).sort((a,b)=>a.c-b.c);if(cs[0].c<cs[cs.length-1].c)o.weak=cs[0]}
  }
- el.forEach(k=>{const w=S.workouts[kDate(k).getDay()];if(w&&!/rest/i.test(w.title))o.wPlan++;if(S.wdone[k])o.wDid++});
+ el0.forEach(k=>{if(S.wdone[k])o.wDid++});el.forEach(k=>{const w=S.workouts[kDate(k).getDay()];if(w&&!/rest/i.test(w.title))o.wPlan++});
  const g=el.map(k=>(S.water&&S.water[k])||0);const tot=g.reduce((a,x)=>a+x,0);
- o.wat={total:tot,avg:tot/el.length,hit:g.filter(x=>x>=8).length,logged:g.filter(x=>x>0).length};
+ o.wat={total:tot,avg:el.length?tot/el.length:0,hit:g.filter(x=>x>=8).length,logged:g.filter(x=>x>0).length};
  return o;
 }
 function rcDelta(a,b,unit){if(a==null||b==null)return '';const d=Math.round(a-b);return d===0?'same as last time':(d>0?'+':'')+d+unit+' vs last time'}
@@ -793,6 +798,7 @@ function recapCard(keys,prevKeys,kind){
  const st=rcStats(keys),pv=rcStats(prevKeys);
  const title=kind==='week'?'Weekly recap':'Monthly recap';
  const range=kind==='week'?shortDate(kDate(keys[0]))+' to '+shortDate(kDate(keys[keys.length-1])):kDate(keys[0]).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+ if(!st.days&&st.off)return '<section class="card s12"><div class="ch"><h2>'+title+'</h2><span class="muted">'+range+'</span></div><div class="empty">Every day so far was a day off. Nothing is counted against you.</div></section>';
  const noData=!st.days||(!(st.rem>0)&&!st.wDid&&!(st.wat&&st.wat.logged)&&!st.mood.n&&!S.thoughts.some(t=>t.d>=keys[0]&&t.d<=keys[keys.length-1]));
  if(noData)return '<section class="card s12"><div class="ch"><h2>'+title+'</h2><span class="muted">'+range+'</span></div><div class="empty">Nothing logged yet. Tick a few things and the recap fills itself in.</div></section>';
  const parts=[];
@@ -812,6 +818,7 @@ function recapCard(keys,prevKeys,kind){
  if(th)row('Thoughts',th+' dumped',pv.days?(S.thoughts.filter(t=>t.d>=prevKeys[0]&&t.d<=prevKeys[prevKeys.length-1]).length+' last time'):'',' data-th="1"');
  if(kind==='month'){const ym=keys[0].slice(0,7),c1=calc(ym,'10'),c2=calc(ym,'25'),inc=c1.sal+c2.sal,bl=c1.total+c2.total,paid=c1.paid+c2.paid;
   if(inc>0){const nb=c1.bills.length+c2.bills.length,np=c1.bills.filter(b=>c1.pm[b.id]).length+c2.bills.filter(b=>c2.pm[b.id]).length;row('Money',peso(inc-bl)+' left after bills ('+pct((inc-bl)/inc*100)+')'+(nb?', '+np+' of '+nb+' bills paid':''),'',' data-money="1"')}}
+ if(st.off){const kinds=keys.filter(k=>k<=key(new Date())&&offK(k)).map(k=>offK(k));const r=kinds.filter(x=>x==='rest').length,sk=kinds.filter(x=>x==='sick').length;row('Days off',(r?r+' rest':'')+(r&&sk?', ':'')+(sk?sk+' sick':'')+' day'+(st.off===1?'':'s'),'not counted against you')}
  const od=(S.up||[]).filter(u=>!u.x&&u.d<key(new Date())).length;
  if(od)row('Coming up',od+' overdue','');
  const weakest=parts.length>1?parts.slice().sort((a,b)=>a.v-b.v)[0]:null;
@@ -823,17 +830,17 @@ function weekView(){
  const days=weekDates(UI.date);const keys=days.map(key);const tk=key(new Date());
  const head=days.map((d,i)=>'<th'+(key(d)===tk?' class="t"':'')+'>'+DOW[d.getDay()]+'<br>'+d.getDate()+'</th>').join('');
  const habitRows=S.rems.slice().sort((a,b)=>a.t.localeCompare(b.t)).map(r=>{
-  let c=0;const cells=keys.map((k,i)=>{const d=!!(S.done[k]||{})[r.id];if(d)c++;return '<td'+(k===tk?' class="t"':'')+'>'+(d?'<span class="hk" aria-label="done">✓</span>':k>tk?'<span class="mi">·</span>':'<span class="mi" aria-label="missed">–</span>')+'</td>'});
+  let c=0;const cells=keys.map((k,i)=>{const d=!!(S.done[k]||{})[r.id];if(d)c++;return '<td'+(k===tk?' class="t"':'')+'>'+(d?'<span class="hk" aria-label="done">✓</span>':offK(k)?'<span class="mi" aria-label="day off">off</span>':k>tk?'<span class="mi">·</span>':'<span class="mi" aria-label="missed">–</span>')+'</td>'});
   return '<tr><td>'+esc(r.l)+'</td>'+cells.join('')+'<td><b>'+c+'/7</b></td></tr>'}).join('');
- const dayPct=keys.map(k=>k>tk?'·':pct(remStats(k).p*100));
- const elapsed=keys.filter(k=>k<=tk);
+ const dayPct=keys.map(k=>k>tk?'·':offK(k)?'off':pct(remStats(k).p*100));
+ const elapsed=keys.filter(k=>k<=tk&&!offK(k));
  const tot=elapsed.reduce((a,k)=>a+remStats(k).p,0);
  const hp=elapsed.length?tot/elapsed.length*100:0;
  const habits='<section class="card s7"><div class="ch"><h2>Daily reminders</h2><span class="chip">'+pct(hp)+' done this week</span></div><div style="overflow-x:auto"><table class="g"><tr><th></th>'+head+'<th></th></tr>'+habitRows+'<tr><td class="muted">Completion</td>'+dayPct.map(p=>'<td class="muted">'+p+'</td>').join('')+'<td></td></tr></table></div></section>';
  let planned=0,did=0;
  const wrows=days.map(d=>{const k=key(d),w=S.workouts[d.getDay()];const rest=/rest/i.test(w.title);const done=!!S.wdone[k];
-  if(!rest&&k<=tk)planned++;if(done)did++;
-  const status=done?'✓ Done':rest?'Rest':k>tk?'Upcoming':k===tk?'Today':'Missed';
+  if(!rest&&k<=tk&&!offK(k))planned++;if(done)did++;
+  const status=done?'✓ Done':offK(k)?OFFL[offK(k)]:rest?'Rest':k>tk?'Upcoming':k===tk?'Today':'Missed';
   const editing=UI.editW===d.getDay();
   return '<div class="wd"><span class="dd">'+DOW[d.getDay()]+'</span><span class="tt">'+(editing?workoutBlock(d.getDay(),k):esc(w.title)+'<small>'+esc(w.ex.split('\n')[0]||'')+'</small>')+'</span>'+(editing?'':'<span class="st">'+status+'</span><button class="btn sm light" data-a="editW" data-d="'+d.getDay()+'" aria-label="Edit '+DOW[d.getDay()]+' workout">Edit</button>')+'</div>'}).join('');
  const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:var(--navy2);color:var(--navytx)">'+did+' done</span></div>'+wrows+'</section>';
@@ -860,7 +867,7 @@ function monthView(){
  const D=UI.date,ym=ymKey(D),tk=key(new Date());
  const[y,m]=ym.split('-').map(Number);const dim=new Date(y,m,0).getDate();
  const all=Array.from({length:dim},(_,i)=>ym+'-'+pad(i+1));
- const el=all.filter(k=>k<=tk);
+ const el=all.filter(k=>k<=tk&&!offK(k));
  const c1=calc(ym,'10'),c2=calc(ym,'25');
  const inc=c1.sal+c2.sal,bills=c1.total+c2.total,paid=c1.paid+c2.paid,left=inc-bills,lp=inc?left/inc*100:0;
  const wP=inc?Math.min(100,paid/inc*100):0,wU=inc?Math.max(0,Math.min(100-wP,(bills-paid)/inc*100)):0,wL=Math.max(0,100-wP-wU);
@@ -870,7 +877,7 @@ function monthView(){
  const sorted=S.rems.slice().sort((a,b)=>a.t.localeCompare(b.t));
  const hrows=sorted.map(r=>{const c=el.filter(k=>(S.done[k]||{})[r.id]).length;const p=el.length?c/el.length*100:0;return '<div class="hb"><span class="n">'+esc(r.l)+'</span><span class="tr"><i style="width:'+p+'%"></i></span><span class="v">'+c+'/'+el.length+'</span></div>'}).join('');
  const tot=el.reduce((a,k)=>a+remStats(k).p,0);const hp=el.length?tot/el.length*100:0;
- const hcal=calGrid(ym,(k,d)=>{if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';const p=remStats(k).p;return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:rgba(var(--pri-rgb),'+(0.1+0.9*p)+');color:var(--ink)" title="'+pct(p*100)+'"><small>'+d+'</small>'+(p>0?Math.round(p*100):'')+'</i>'});
+ const hcal=calGrid(ym,(k,d)=>{if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';if(offK(k))return '<i class="cc" title="'+OFFL[offK(k)]+'" style="border:1px dashed var(--line2)"><small>'+d+'</small>off</i>';const p=remStats(k).p;return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:rgba(var(--pri-rgb),'+(0.1+0.9*p)+');color:var(--ink)" title="'+pct(p*100)+'"><small>'+d+'</small>'+(p>0?Math.round(p*100):'')+'</i>'});
  const habits='<section class="card s6"><div class="ch"><h2>Daily reminders</h2><span class="chip">'+pct(hp)+' done this month</span></div>'+(hrows||'<div class="empty">No reminders.</div>')+'<div class="sec">Completion by day</div>'+hcal+'</section>';
  const ms=moodStats(all);
  const mcal=calGrid(ym,(k,d)=>{const s=moodStats([k]);if(k>tk)return '<i class="cc fut"><small>'+d+'</small></i>';if(!s.n)return '<i class="cc'+(k===tk?' tdy':'')+'"><small>'+d+'</small></i>';const r=Math.round(s.avg);return '<i class="cc'+(k===tk?' tdy':'')+'" style="background:'+MCOL[r]+';color:var(--ink)" title="'+mword(s.avg)+' ('+s.avg.toFixed(1)+')"><small>'+d+'</small>'+MOODS[r].e+'</i>'});
@@ -878,8 +885,8 @@ function monthView(){
  const dist=[5,4,3,2,1].filter(v=>ms.dist[v]).map(v=>MOODS[v].e+' '+ms.dist[v]).join('  ');
  const mood='<section class="card pink s6"><div class="ch"><h2>Mood this month</h2>'+(ms.n?'<span class="chip" style="background:#fff">'+memo(ms.avg)+' '+mword(ms.avg)+'</span>':'')+'</div>'+mcal+'<div class="sec">By time of day</div>'+slotBars+(dist?'<p class="sum">'+dist+'</p>':'')+'<p class="sum">'+esc(moodText(ms,el.length))+'</p></section>';
  let planned=0,did=0;
- el.forEach(k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()];if(!/rest/i.test(w.title))planned++;if(S.wdone[k])did++});
- const wcal=calGrid(ym,(k,d)=>{const done=!!S.wdone[k];return '<i class="cc'+(k===tk?' tdy':'')+(k>tk?' fut':'')+'" style="'+(done?'background:var(--pri);color:var(--ink)':'background:var(--navy2);color:var(--navyt)')+(k>tk?';background:transparent;border:1px dashed var(--navy3)':'')+'"><small>'+d+'</small>'+(done?'✓':'')+'</i>'});
+ all.filter(k=>k<=tk).forEach(k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()];if(!/rest/i.test(w.title)&&!offK(k))planned++;if(S.wdone[k])did++});
+ const wcal=calGrid(ym,(k,d)=>{const done=!!S.wdone[k];if(!done&&offK(k)&&k<=tk)return '<i class="cc'+(k===tk?' tdy':'')+'" title="'+OFFL[offK(k)]+'" style="background:transparent;border:1px dashed var(--navy3);color:var(--navyt)"><small>'+d+'</small>off</i>';return '<i class="cc'+(k===tk?' tdy':'')+(k>tk?' fut':'')+'" style="'+(done?'background:var(--pri);color:var(--ink)':'background:var(--navy2);color:var(--navyt)')+(k>tk?';background:transparent;border:1px dashed var(--navy3)':'')+'"><small>'+d+'</small>'+(done?'✓':'')+'</i>'});
  const workouts='<section class="card navy s5"><div class="ch"><h2>Workouts</h2><span class="chip" style="background:var(--navy2);color:var(--navytx)">'+did+' done · '+planned+' planned so far</span></div>'+wcal+'</section>';
  const th=S.thoughts.filter(t=>t.d.slice(0,7)===ym).sort((a,b)=>b.ts-a.ts);
  const q=(document.getElementById('tq')||{}).value||'';
@@ -1017,6 +1024,7 @@ document.addEventListener('click',e=>{
  if(a==='editRem'){UI.editRem=!UI.editRem;render();return}
  if(a==='upAdd'){UI.upAdd=!UI.upAdd;render();return}
  if(a==='upAll'){UI.upAll=!UI.upAll;render();return}
+ if(a==='off'){const v=t.dataset.v;S.off=S.off||{};if(S.off[dk]===v)delete S.off[dk];else S.off[dk]=v;commit();return}
  if(a==='water'){const n=+t.dataset.n;S.water=S.water||{};S.water[dk]=(S.water[dk]||0)===n?n-1:n;commit();return}
  if(a==='tickUp'){const u=(S.up||[]).find(u=>u.id===id);if(u){if(u.x)delete u.x;else u.x=key(new Date())}commit();return}
  if(a==='delUp'){S.up=(S.up||[]).filter(u=>u.id!==id);commit();return}
