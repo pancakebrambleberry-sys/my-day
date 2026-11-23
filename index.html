@@ -375,11 +375,11 @@ function applyTheme(name){
   const ic=document.querySelector('link[rel=icon]');if(ic)ic.setAttribute('href','data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='"+t.pri+"'/><circle cx='32' cy='32' r='11' fill='"+t.bg+"'/><g stroke='"+t.bg+"' stroke-width='5' stroke-linecap='round'><path d='M32 8v7M32 49v7M8 32h7M49 32h7M15 15l5 5M44 44l5 5M49 15l-5 5M20 44l-5 5'/></g></svg>"))}catch(_){}
 }
 let THPANEL=false,MNPANEL=false;
-const CURS=['₱','$','€','£','¥','₹','₩','RM','S$','A$','C$','HK$','NT$','Rp','฿','₫','R','CHF','kr','AED'];
+const CURS=['₱','$','€','£','¥','₹','₩','RM'];
 function moneyBtn(){return '<button class="btn sm ghost" data-a="mnmenu">Paycheck</button>'}
 function moneyPanelSet(){if(!MNPANEL)return '';
  return '<div class="lkp"><h3>Paycheck settings</h3><p>Set this to match how you get paid.</p>'
-  +'<label>Currency symbol <input class="in" list="curs" data-c="cur" value="'+esc(curSym())+'" maxlength="4" style="width:90px;margin:0 0 0 6px" aria-label="Currency symbol"></label><datalist id="curs">'+CURS.map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>'
+  +'<label>Currency <select class="in" data-c="cur" aria-label="Currency" style="width:auto;margin:0 0 0 6px">'+(CURS.includes(curSym())?CURS:CURS.concat([curSym()])).map(c=>'<option value="'+esc(c)+'"'+(c===curSym()?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></label>'
   +'<label>Paychecks per month <select class="in" data-c="pays" style="width:auto;margin:0 0 0 6px"><option value="1"'+(single()?' selected':'')+'>1 (once a month)</option><option value="2"'+(single()?'':' selected')+'>2 (twice a month)</option></select></label>'
   +'<label>Payday <input class="in" type="number" min="1" max="31" data-c="payday" data-p="10" value="'+payDay('10')+'" style="width:80px;margin:0 0 0 6px" aria-label="First payday"></label>'
   +(single()?'':'<label>Second payday (0 = none) <input class="in" type="number" min="0" max="31" data-c="payday" data-p="25" value="'+payDay('25')+'" style="width:80px;margin:0 0 0 6px" aria-label="Second payday"></label>')
