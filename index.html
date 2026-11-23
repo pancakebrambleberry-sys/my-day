@@ -260,6 +260,8 @@ function migrate(){if(S.v2)return false;S.rems.forEach(r=>{r.l=r.l.replace(/[\p{
 let FRESHDEV=false;
 try{const raw=localStorage.getItem(STORE);if(raw)S=Object.assign(defaults(),JSON.parse(raw));else FRESHDEV=true}catch(e){}
 if(FRESHDEV)S.onb=false;
+const TRYMODE=/[#&](welcome|try)(&|$)/.test(location.hash||'');
+if(TRYMODE){S=defaults();S.onb=false}
 if(migrate()&&S.updated){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
 
 /* ---------- persistence ---------- */
@@ -268,7 +270,7 @@ function syncLabel(){return syncState==='signedout'?'Sign in to sync':syncState=
 function setSync(s){syncState=s;const el=document.getElementById('sync');if(el)el.textContent=syncLabel()}
 let SHLINK='',READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
 function save(){if(S.up){const t=key(new Date());S.up=S.up.filter(u=>!u.x||u.x>=t)}
- if(READONLY)return;
+ if(READONLY||TRYMODE)return;
  S.updated=Date.now();
  try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}
  if(!ref)return;
@@ -298,6 +300,7 @@ function attach(r){
 }
 async function initCloud(){
  try{
+  if(TRYMODE){setSync('local');return}
   if(typeof firebase==='undefined'||!FIREBASE_CONFIG.apiKey||/PASTE/.test(FIREBASE_CONFIG.apiKey)){setSync('local');return}
   firebase.initializeApp(FIREBASE_CONFIG);
   AUTH.enabled=true;AUTH.auth=firebase.auth();const fs=firebase.firestore();AUTH.fs=fs;
@@ -422,7 +425,7 @@ const LK='pbb-lock-v1';
 function lkGet(){try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(_){return null}}
 async function lkHash(pw,salt){const t=salt+'|'+pw;try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_){}let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'f'+h}
 async function lkCheck(pw){const l=lkGet();if(!l)return false;pw=pw==null?'':String(pw);const c=[pw,pw.trim(),pw+' '];for(const x of c){if(x&&(await lkHash(x,l.s))===l.h)return true}return false}
-let LOCKED=!!lkGet()&&!(()=>{try{const v=sessionStorage.getItem('pbb-unl');sessionStorage.removeItem('pbb-unl');return v==='1'}catch(_){return false}})(),LKPANEL=false,LKNOTE='',LKOK=false;
+let LOCKED=!TRYMODE&&!!lkGet()&&!(()=>{try{const v=sessionStorage.getItem('pbb-unl');sessionStorage.removeItem('pbb-unl');return v==='1'}catch(_){return false}})(),LKPANEL=false,LKNOTE='',LKOK=false;
 const $v=id=>{const e=document.getElementById(id);return e?e.value:''};
 function lockBtn(){return '<button class="btn sm ghost" data-a="lockmenu">'+(lkGet()?'Password':'Set password')+'</button>'}
 function lockPanel(){if(!LKPANEL)return '';const has=!!lkGet();
@@ -838,7 +841,9 @@ function gateScreen(){document.title='pbb-day';
  document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter the code you were given to see this dashboard. You can only look.</p><input id="vw-code" type="text" autocomplete="off" autocapitalize="none" placeholder="Code" aria-label="Code"><div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div><button class="btn" data-a="vw-open">Open</button>'+(VIEWGATE?'<p style="margin:12px 0 0;font-size:13px"><a href="#" data-a="gate-back" style="color:inherit;font-weight:600">Back</a></p>':'')+'</div>';
  const e=document.getElementById('vw-code');if(e){e.value=v;if(!had)try{e.focus()}catch(_){}}}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='vw-code'){const b=document.querySelector('[data-a="vw-open"]');if(b)b.click()}});
-function render(){
+function tryBar(){if(!TRYMODE)return;const a=document.getElementById('app');if(!a||a.querySelector('.trybar'))return;const b=document.createElement('div');b.className='trybar';b.style.cssText='background:#fff3c4;border:1px solid #e6c34d;color:#3b2f00;padding:8px 12px;border-radius:12px;margin:0 0 12px;font-size:13.5px;text-align:center';b.innerHTML='Preview only: nothing you type here is saved. <a href="./" style="color:inherit;font-weight:700">Exit preview</a>';a.insertBefore(b,a.firstChild)}
+function render(){render0();tryBar()}
+function render0(){
  applyTheme(S.theme);
  if(!READONLY&&AUTH.enabled&&!AUTH.user&&(VIEWGATE||(/[#&]view(&|$)/.test(location.hash||'')&&!/[#&]v=/.test(location.hash||'')))){gateScreen();return}
  if(LOCKED){lockScreen();return}
