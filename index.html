@@ -253,7 +253,9 @@ let S=defaults();
 const UI={view:'day',date:mid(new Date()),editRem:false,editW:null};
 const STORE='myday-state-v1';
 function migrate(){if(S.v2)return false;S.rems.forEach(r=>{r.l=r.l.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu,'').replace(/\s+/g,' ').trim()||r.l});S.v2=true;return true}
-try{const raw=localStorage.getItem(STORE);if(raw)S=Object.assign(defaults(),JSON.parse(raw))}catch(e){}
+let FRESHDEV=false;
+try{const raw=localStorage.getItem(STORE);if(raw)S=Object.assign(defaults(),JSON.parse(raw));else FRESHDEV=true}catch(e){}
+if(FRESHDEV)S.onb=false;
 if(migrate()&&S.updated){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
 
 /* ---------- persistence ---------- */
@@ -276,13 +278,14 @@ async function push(){
  writing=false;
  if(pending){pending=false;push()}
 }
+function isPristine(){return !!S.fresh&&!S.thoughts.length&&!Object.keys(S.done||{}).length&&!Object.keys(S.mood||{}).length&&!Object.keys(S.wdone||{}).length&&!Object.keys(S.paid||{}).length}
 function attach(r){
  return Promise.race([r.get(),new Promise(res=>setTimeout(()=>res(null),10000))]).then(snap=>{
   if(!snap){ref=null;setSync('error');return}
   ref=r;
   if(snap.exists){
    const d=snap.data()||{};
-   if((d.updated||0)>(S.updated||0)&&d.json){S=Object.assign(defaults(),JSON.parse(d.json));const mg=migrate();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(mg)push()}
+   if(d.json&&((d.updated||0)>(S.updated||0)||isPristine())){S=Object.assign(defaults(),JSON.parse(d.json));const mg=migrate();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(mg)push()}
    else if((S.updated||0)>(d.updated||0)){push()}
   }else if(S.updated){push()}
   setSync(syncState==='saving'?'saving':'saved');
@@ -807,13 +810,14 @@ function monthView(){
 
 function gateScreen(){document.title='pbb-day';
  const had=document.getElementById('vw-code');const v=had?had.value:'';
- document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter the code you were given to see this dashboard. You can only look.</p><input id="vw-code" type="text" autocomplete="off" autocapitalize="none" placeholder="Code" aria-label="Code"><div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div><button class="btn" data-a="vw-open">Open</button></div>';
+ document.getElementById('app').innerHTML='<div class="lock"><h1>pbb-day</h1><p>Enter the code you were given to see this dashboard. You can only look.</p><input id="vw-code" type="text" autocomplete="off" autocapitalize="none" placeholder="Code" aria-label="Code"><div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div><button class="btn" data-a="vw-open">Open</button>'+(VIEWGATE?'<p style="margin:12px 0 0;font-size:13px"><a href="#" data-a="gate-back" style="color:inherit;font-weight:600">Back</a></p>':'')+'</div>';
  const e=document.getElementById('vw-code');if(e){e.value=v;if(!had)try{e.focus()}catch(_){}}}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='vw-code'){const b=document.querySelector('[data-a="vw-open"]');if(b)b.click()}});
 function render(){
  applyTheme(S.theme);
- if(!READONLY&&AUTH.enabled&&!AUTH.user&&/[#&]view(&|$)/.test(location.hash||'')&&!/[#&]v=/.test(location.hash||'')){gateScreen();return}
+ if(!READONLY&&AUTH.enabled&&!AUTH.user&&(VIEWGATE||(/[#&]view(&|$)/.test(location.hash||'')&&!/[#&]v=/.test(location.hash||'')))){gateScreen();return}
  if(LOCKED){lockScreen();return}
+ if(S.onb===false&&!READONLY){welcomeScreen();return}
  const keep={};document.querySelectorAll('[data-keep]').forEach(e=>{keep[e.dataset.keep]=e.value});
  const ae=document.activeElement,fk=ae&&ae.dataset?ae.dataset.keep:null;
  const D=UI.date;
@@ -835,6 +839,33 @@ function render(){
  roLock();
 }
 
+
+/* ---------- first-time welcome ---------- */
+let VIEWGATE=false;
+function welcomeScreen(){document.title='pbb-day';
+ const had=document.getElementById('ob-name');const keep={};if(had)['ob-name','ob-cur','ob-pays','ob-p1','ob-p2','ob-s1','ob-s2'].forEach(i=>{const e=document.getElementById(i);if(e)keep[i]=e.value});
+ const opt=(c)=>'<option value="'+esc(c)+'">'+esc(c)+'</option>';
+ document.getElementById('app').innerHTML='<div class="lock" style="max-width:440px;text-align:left"><h1>Welcome</h1><p>A few quick questions to set this up for you. You can change everything later.</p>'
+  +'<label style="display:block;font-size:13.5px;margin:6px 0 2px">What should I call you? (optional)</label><input id="ob-name" type="text" maxlength="30" autocomplete="given-name" placeholder="Your name">'
+  +'<label style="display:block;font-size:13.5px;margin:6px 0 2px">Currency</label><select class="in" id="ob-cur" style="width:100%;margin-bottom:8px">'+CURS.map(opt).join('')+'</select>'
+  +'<label style="display:block;font-size:13.5px;margin:6px 0 2px">How often are you paid?</label><select class="in" id="ob-pays" style="width:100%;margin-bottom:8px"><option value="1">Once a month</option><option value="2" selected>Twice a month</option></select>'
+  +'<div style="display:flex;gap:8px"><div style="flex:1"><label style="display:block;font-size:13.5px;margin:6px 0 2px">First payday (day)</label><input id="ob-p1" type="number" min="1" max="31" inputmode="numeric" value="10"></div><div style="flex:1"><label style="display:block;font-size:13.5px;margin:6px 0 2px">Second payday (day)</label><input id="ob-p2" type="number" min="1" max="31" inputmode="numeric" value="25"></div></div>'
+  +'<div style="display:flex;gap:8px"><div style="flex:1"><label style="display:block;font-size:13.5px;margin:6px 0 2px">First salary (optional)</label><input id="ob-s1" type="number" min="0" inputmode="decimal" placeholder="0"></div><div style="flex:1"><label style="display:block;font-size:13.5px;margin:6px 0 2px">Second salary</label><input id="ob-s2" type="number" min="0" inputmode="decimal" placeholder="0"></div></div>'
+  +'<label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:6px 0 10px"><input id="ob-ex" type="checkbox" style="width:auto;margin:0"> Add example bills I can edit</label>'
+  +'<div class="msg" id="ob-msg" role="alert">'+esc(SHNOTE)+'</div>'
+  +'<div class="row"><button class="btn" data-a="ob-go">Start</button><button class="btn ghost" data-a="ob-skip">Skip for now</button></div>'
+  +(AUTH.enabled?'<p style="margin:14px 0 4px;font-size:13px">Already use this? '+(AUTH.user?'':'<a href="#" data-a="signin" style="color:inherit;font-weight:600">Sign in with Google</a> to load your data. ')+'<a href="#" data-a="ob-view" style="color:inherit;font-weight:600">Have a code? View a shared dashboard</a></p>':'')+'</div>';
+ for(const k in keep){const e=document.getElementById(k);if(e)e.value=keep[k]}
+ if(!had){const e=document.getElementById('ob-name');if(e)try{e.focus()}catch(_){}}}
+function obFinish(skip){
+ const n=(id)=>{const e=document.getElementById(id);return e?e.value:''};
+ const two=n('ob-pays')!=='1',num=v=>Math.max(0,parseFloat(v)||0),day=(v,d)=>{v=Math.round(parseFloat(v));return v>=1&&v<=31?v:d};
+ if(!skip){const nm=n('ob-name').trim().slice(0,30);if(nm)S.name=nm;const c=n('ob-cur');S.cur=CURS.includes(c)?c:'₱';S.pays=two?2:1;
+  let p1=day(n('ob-p1'),10),p2=day(n('ob-p2'),25);if(two&&p2<=p1)p2=Math.min(31,p1+1);if(two&&p1>=31)p1=30;S.pay={'10':p1,'25':p2};
+  S.salary={'10':num(n('ob-s1')),'25':two?num(n('ob-s2')):0};
+  const ex=!!(document.getElementById('ob-ex')||{}).checked;if(!ex){S.bills=[];S.paid={};S.sampleBills=false}else S.sampleBills=true}
+ else{S.salary={'10':0,'25':0};S.bills=[];S.paid={};S.sampleBills=false}
+ S.onb=true;S.fresh=true;commit()}
 /* ---------- events ---------- */
 function val(id){const e=document.getElementById(id)||document.querySelector('[data-keep="'+id+'"]');return e?e.value:''}
 function addThought(){
@@ -845,6 +876,7 @@ function addThought(){
 }
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');if(!t)return;
+ if(t.tagName==='A')e.preventDefault();
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
  if(READONLY&&!ROK.has(a))return;
  if(a==='ro-exit'){vwExit();return}
@@ -864,6 +896,10 @@ document.addEventListener('click',e=>{
  if(a==='sh-copy'){const t=shLink()||SHLINK;try{navigator.clipboard.writeText(t).then(()=>{SHNOTE='Link copied.';render()},()=>{const e=document.getElementById('sh-link');if(e){e.select()}})}catch(_){const e=document.getElementById('sh-link');if(e)e.select()}return}
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
+ if(a==='ob-go'){obFinish(false);return}
+ if(a==='ob-skip'){obFinish(true);return}
+ if(a==='ob-view'){VIEWGATE=true;SHNOTE='';render();return}
+ if(a==='gate-back'){VIEWGATE=false;SHNOTE='';render();return}
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
  if(a==='exportTh'){if(!S.thoughts.length){BKNOTE='No thoughts to export yet.';BKNOTEOK=false;if(BKPANEL)render();return}dlFile('my-day-thoughts-'+stamp()+'.csv',thoughtsCsv(),'text/csv;charset=utf-8');BKNOTE='Exported '+S.thoughts.length+' thought'+(S.thoughts.length>1?'s':'')+' with date and time.';BKNOTEOK=true;if(BKPANEL)render();return}
  if(a==='bkdl'){dlFile('my-day-backup-'+stamp()+'.json',backupJson(),'application/json');BKNOTE='Backup downloaded.';BKNOTEOK=true;render();return}

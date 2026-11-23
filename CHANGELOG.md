@@ -5,6 +5,7 @@ Every improvement to pbb-day is listed here, newest first. Each entry says what 
 ## Nov 23, 2026
 
 ### Added
+- **First-time welcome.** A new person is asked for their name, currency, how often they are paid, payday dates and salary before the dashboard opens, so they start with their own numbers, not example figures. They can skip it, or press "Have a code?" to view a shared dashboard. People who already have data are never asked, and a new device that signs in to an existing account loads the cloud data instead of starting blank.
 - **Share a view-only copy.** Press **Share**, and friends can see your dashboard but not change it. You get a link with the code inside, and friends can also open the `#view` link and type the code. Money and thoughts are hidden unless you include them. **Stop sharing** switches it off.
 - **Unhinged truth card.** A playful summary of your thoughts for the day, week or month. It uses only your own words and runs in your browser. If your thoughts sound heavy, it shows a kind message instead of a joke.
 - **Export thoughts.** Download your thoughts as a spreadsheet file with the date and time of each one.
