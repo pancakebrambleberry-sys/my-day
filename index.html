@@ -166,7 +166,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .wm .k.half{border-color:var(--pri)}.wm .k.on{background:var(--pri);border-color:var(--pri)}
 .wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:var(--pri);line-height:1}
 .wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:var(--navyt)}
-.mini{padding:12px 14px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wfull{margin:2px 0 8px}.wfull b{display:block;font-size:15px;margin-bottom:3px}.wfull ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.45;columns:2;column-gap:14px;opacity:.9}.wfull li{break-inside:avoid;padding:0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
+.mini{padding:12px 14px}.mini .rem.due .rl{color:var(--bad);font-weight:600}.mini .ck{width:22px;height:22px;border-radius:7px;font-size:13px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wfull{margin:2px 0 8px}.wfull b{display:block;font-size:15px;margin-bottom:3px}.wfull ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.45;columns:2;column-gap:14px;opacity:.9}.wfull li{break-inside:avoid;padding:0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
 .stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}.stack.cmp{align-self:start}@media(min-width:681px) and (max-width:1000px){.hello,.tiles{order:-3}.rmc{order:-2}.mdc{order:-1}.stack.cmp{grid-column:span 12;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}}.stack.cmp>.card{flex:none}
 .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
@@ -265,7 +265,7 @@ let ref=null,syncState='local',writing=false,pending=false,timer=null;
 function syncLabel(){return syncState==='signedout'?'Sign in to sync':syncState==='saved'?'✓ Synced to your Google account':syncState==='saving'?'Saving…':syncState==='error'?'⚠ Couldn’t sync, saved on this device':'Saved on this device'}
 function setSync(s){syncState=s;const el=document.getElementById('sync');if(el)el.textContent=syncLabel()}
 let SHLINK='',READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
-function save(){if(S.up){const t=key(new Date());S.up=S.up.filter(u=>u.d>=t)}
+function save(){if(S.up){const t=key(new Date());S.up=S.up.filter(u=>!u.x||u.x>=t)}
  if(READONLY)return;
  S.updated=Date.now();
  try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}
@@ -569,12 +569,14 @@ function remindersCard(dk,isToday){
  +'<div class="addrow"><input class="in" data-keep="newRem" placeholder="New reminder…" aria-label="New reminder"><input class="in" style="flex:0 0 112px" type="time" data-keep="newRemT" value="09:00" aria-label="Reminder time"><button class="btn sm" data-a="addRem">Add</button></div></section>';
 }
 
-function upList(){const t=key(new Date());return (S.up||[]).filter(u=>u.d>=t).sort((a,b)=>a.d.localeCompare(b.d)||a.l.localeCompare(b.l))}
+function upList(){const t=key(new Date());return (S.up||[]).filter(u=>!u.x||u.x>=t).sort((a,b)=>(!!a.x-!!b.x)||a.d.localeCompare(b.d)||a.l.localeCompare(b.l))}
 function upWhen(d){const t=mid(new Date()),x=new Date(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10),12);const n=Math.round((x-t)/864e5);return n===0?'Today':n===1?'Tomorrow':'in '+n+' days'}
 function upcomingCard(){
  const list=upList(),show=UI.upAll?list:list.slice(0,3);
- const rows=show.map(u=>{const x=new Date(+u.d.slice(0,4),+u.d.slice(5,7)-1,+u.d.slice(8,10),12);const w=upWhen(u.d);
-  return '<div class="rem'+(w==='Today'?' due':'')+'" style="padding:3px 0;font-size:13px"><span class="rl">'+esc(u.l)+'</span><span class="tm">'+(w==='Today'?'today':shortDate(x))+'</span><button class="x" data-a="delUp" data-id="'+u.id+'" aria-label="Remove '+esc(u.l)+'">✕</button></div>'}).join('');
+ const t0=key(new Date());
+ const rows=show.map(u=>{const x=new Date(+u.d.slice(0,4),+u.d.slice(5,7)-1,+u.d.slice(8,10),12);const done=!!u.x,over=!done&&u.d<t0;
+  const lab=over?'overdue · '+shortDate(x):u.d===t0?'today':shortDate(x);
+  return '<div class="rem'+(done?' done':'')+(over?' due':'')+'" style="padding:5px 8px;margin:4px 0;font-size:13px">'+ckBtn(done,'data-a="tickUp" data-id="'+u.id+'"','Mark '+u.l+(done?' not done':' done'))+'<span class="rl">'+esc(u.l)+'</span><span class="tm">'+lab+'</span><button class="x" data-a="delUp" data-id="'+u.id+'" aria-label="Remove '+esc(u.l)+'">✕</button></div>'}).join('');
  const more=list.length>3?'<button class="btn sm ghost" style="padding:2px 8px;font-size:12px" data-a="upAll">'+(UI.upAll?'Show less':'+'+(list.length-3)+' more')+'</button>':'';
  const form=UI.upAdd?'<div class="addrow" style="margin-top:6px"><input class="in" data-keep="newUp" placeholder="What?" aria-label="Upcoming reminder"><input class="in" style="flex:0 0 130px" type="date" data-keep="newUpD" value="'+(key(UI.date)>=key(new Date())?key(UI.date):'')+'" min="'+key(new Date())+'" aria-label="Date"><button class="btn sm" data-a="addUp">Add</button></div>':'';
  return '<section class="card mini"><div class="ch" style="margin:0 0 4px"><h2 style="font-size:14px;margin:0">Coming up</h2><span>'+more+' <button class="btn sm light" style="padding:2px 9px;font-size:12px" data-a="upAdd">'+(UI.upAdd?'Close':'+ Add')+'</button></span></div>'
@@ -739,7 +741,7 @@ function dayView(){
  const bits=[];
  if(isToday){
   bits.push(st.n-st.c>0?(st.n-st.c)+' reminder'+(st.n-st.c>1?'s':'')+' left today.':'All reminders done 🎉.');
-  {const tu=upList().filter(u=>u.d===key(new Date()));if(tu.length)bits.push('Today: '+tu.map(u=>u.l).join(', ')+'.')}
+  {const t1=key(new Date()),tu=upList().filter(u=>!u.x&&u.d===t1),od=upList().filter(u=>!u.x&&u.d<t1);if(tu.length)bits.push('Today: '+tu.map(u=>u.l).join(', ')+'.');if(od.length)bits.push(od.length+' overdue in Coming up.')}
   bits.push('Workout: '+w.title+'.');
   bits.push('Next payday is '+DOW[np.getDay()]+', '+shortDate(np)+' ('+(nd===0?'today':'in '+nd+' day'+(nd>1?'s':''))+').');
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
@@ -946,6 +948,7 @@ document.addEventListener('click',e=>{
  if(a==='editRem'){UI.editRem=!UI.editRem;render();return}
  if(a==='upAdd'){UI.upAdd=!UI.upAdd;render();return}
  if(a==='upAll'){UI.upAll=!UI.upAll;render();return}
+ if(a==='tickUp'){const u=(S.up||[]).find(u=>u.id===id);if(u){if(u.x)delete u.x;else u.x=key(new Date())}commit();return}
  if(a==='delUp'){S.up=(S.up||[]).filter(u=>u.id!==id);commit();return}
  if(a==='addUp'){const l=val('newUp').trim(),d=val('newUpD');if(!l||!d||d<key(new Date()))return;(S.up=S.up||[]).push({id:uid(),d,l});UI.upAdd=false;commit();return}
  if(a==='delRem'){S.rems=S.rems.filter(r=>r.id!==id);commit();return}
