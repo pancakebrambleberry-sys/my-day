@@ -42,7 +42,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
 .s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
 @media(max-width:1000px){.s3,.s4{grid-column:span 6}.s5,.s6,.s7,.s8{grid-column:span 12}}
-@media(max-width:680px){.s3,.s4{grid-column:span 12}.shell{padding:14px;border-radius:22px}.tabs{order:3;width:100%;justify-content:center}.tab{flex:1;text-align:center;padding:8px 6px}}
+@media(max-width:680px){.top{gap:8px}.top .btn.sm{padding:6px 11px;font-size:12.5px}.top .logo{padding:6px 12px;font-size:15px}.top .sync{font-size:11.5px;padding:5px 9px}.s3,.s4{grid-column:span 12}.shell{padding:14px;border-radius:22px}.tabs{order:3;width:100%;justify-content:center}.tab{flex:1;text-align:center;padding:8px 6px}}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
 .card.lav{background:var(--lav);border-color:transparent}
 .card.navy{background:var(--navy);color:var(--navytx);border-color:transparent}
@@ -546,7 +546,7 @@ function moneyPanel(ym,which,cls){
  +'<div class="bar" role="img" aria-label="'+pct(c.paidPct)+' paid, '+pct(c.sal?c.unpaid/c.sal*100:0)+' still to pay, '+pct(Math.max(0,c.pct))+' left"><i style="width:'+wPaid+'%;background:var(--prid)"></i><i style="width:'+wUn+'%;background:var(--pri)"></i><i style="width:'+wLeft+'%;background:var(--pink2)"></i></div>'
  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(c.paid)+' ('+pct(c.paidPct)+')</span><span><u style="background:var(--pri)"></u>To pay '+peso(c.unpaid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,c.left))+'</span></div>'
  +(rows||'<div class="empty">No bills for this paycheck yet.</div>')
- +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="₱ amount" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
+ +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="₱ amt" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
 }
 function sampleNote(){
  return S.sampleBills?'<div class="s12 note-sample"><span>These bills are <b>samples</b>. Edit the names and amounts, or clear them and add your own.</span><button class="btn sm" data-a="clearBills">Clear sample bills</button></div>':'';

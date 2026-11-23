@@ -1,8 +1,53 @@
 # pbb-day
 
-A personal day planner that runs in your browser. It has daily reminders, a finance tracker for two paydays (with "% left after bills"), a weekly workout plan with a workout streak calendar, a mood tracker, a thought dump, a motivational quote, a focus timer, and Day / Week / Month views. There are nine color themes and an optional password lock.
+**A calm, one-page planner for your day.** Reminders, money, workouts, mood and a thought dump, all in one place that opens in your browser. It's free, has no ads, and works on your phone and laptop.
 
-It is one file (`index.html`), so you can host it for free on GitHub Pages.
+<p align="center">
+  <img src="images/day-view.png" alt="Day view with reminders, workout, mood, workout streak calendar, quote and focus timer" width="860">
+</p>
+
+## What is it?
+
+pbb-day is a personal dashboard made of one web page (`index.html`). Open it, tick off what you did today, log how you feel, and see how your week and month are going. There's nothing to install and nothing to pay for. Put it on your phone's Home Screen and it opens like an app.
+
+## What can it do?
+
+| | |
+|---|---|
+| **Daily reminders** | Your own checklist for the day, such as meds, stretching, feeding the pet or clearing your inbox. Each one has a time and turns "due" when it's late. |
+| **Workout plan + streak** | A workout set for each weekday that shows up on its day. Mark it done and a monthly calendar fills in, with a weekly streak. |
+| **Money tracker** | Set up two paydays (the 10th and 25th by default) with their own bills. It shows the **% of your salary left after bills**. |
+| **Mood tracker** | Tap how you feel in the morning, afternoon and evening. It shows a summary for the day, week and month. |
+| **Thought dump** | Get things out of your head and find them later. |
+| **Quote + focus timer** | A short motivating quote that changes every few hours, plus 15, 25 and 50 minute focus timers. |
+| **Day, Week, Month** | See one day, the whole week, or the month at a glance. |
+| **9 colors** | Yellow, Orange, Red, Pink, Purple, Maroon, Blue, Green and Gray. |
+| **Password lock** | An optional password asked each time the page opens on that device. |
+| **Sync** | Optional Google sign-in saves your data to the cloud, so your phone and laptop match. |
+
+<p align="center">
+  <img src="images/phone.png" alt="Phone view" width="260">
+  &nbsp;&nbsp;
+  <img src="images/themes.png" alt="The nine color themes" width="560">
+</p>
+
+## Who is it for?
+
+- **People who like simple routines:** one place for the small daily things.
+- **People with a salary paid twice a month:** see right away how much is left after bills.
+- **People building a workout habit:** a plan for each day and a streak that rewards showing up.
+- **People who want to track their mood** without a heavy journaling app.
+- **People managing ADHD or a busy brain:** short checklists, a thought dump and a focus timer.
+- **Students and workers** who want a free planner they can fully customize.
+- **Anyone who wants their own copy:** it's one file you can change and host for free.
+
+It is not a medical or financial tool. It helps you keep track, and it doesn't give advice.
+
+<p align="center">
+  <img src="images/week-view.png" alt="Week view" width="420">
+  &nbsp;
+  <img src="images/month-view.png" alt="Month view" width="420">
+</p>
 
 ---
 
