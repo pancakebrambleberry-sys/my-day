@@ -3,7 +3,7 @@
 **A calm, one-page planner for your day.** Reminders, money, workouts, mood and a thought dump, all in one place that opens in your browser. It's free, has no ads, and works on your phone and laptop.
 
 <p align="center">
-  <img src="images/day-view.png" alt="Day view with reminders, Coming up, workout, mood, workout streak calendar, quote and focus timer" width="860">
+  <img src="images/day-view.png" alt="Day view with reminders, Coming up, workout, water tracker, mood, workout streak calendar, quote and focus timer" width="860">
 </p>
 
 ## What is it?
@@ -16,6 +16,7 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 |---|---|
 | **Daily reminders** | Your own checklist for the day, such as meds, stretching, feeding the pet or clearing your inbox. Each one has a time and turns "due" when it's late. |
 | **Workout plan + streak** | A workout set for each weekday that shows up on its day. Mark it done and a monthly calendar fills in, with a weekly streak. |
+| **Water tracker** | Tap to log up to 8 glasses a day. |
 | **Coming up** | Add something for a future date. Tick it off when done; if you miss it, it stays and turns red as overdue. |
 | **First-time welcome** | New people answer a few quick questions (name, currency, paydays, salary) so they start with their own numbers. |
 | **Money tracker** | One or two paychecks a month, each with its own salary, bills and payday date (the 10th and 25th to start, change them any time). Pick your own currency symbol, and set the second payday to 0 if you are paid once a month. It shows the **% of your salary left after bills**. |

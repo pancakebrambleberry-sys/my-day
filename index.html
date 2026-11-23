@@ -167,6 +167,7 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:var(--pri);line-height:1}
 .wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:var(--navyt)}
 .mini{padding:12px 14px}.mini .rem.due .rl{color:var(--bad);font-weight:600}.mini .ck{width:22px;height:22px;border-radius:7px;font-size:13px}.mini .ch{margin-bottom:8px}.mini .ch h2{font-size:15px}.mini .rem{padding:6px 10px;margin:5px 0;font-size:13.5px}.mini .addrow{margin-top:8px;gap:6px}.mini .in{padding:6px 9px;font-size:13px}.mini .empty{font-size:12.5px;padding:6px 0}.wfull{margin:2px 0 8px}.wfull b{display:block;font-size:15px;margin-bottom:3px}.wfull ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.45;columns:2;column-gap:14px;opacity:.9}.wfull li{break-inside:avoid;padding:0}.wmini{font-size:13px;color:inherit;opacity:.85;margin:2px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.wmini b{font-size:15px;display:block;opacity:1}
+.gls{display:flex;gap:5px;margin:2px 0 4px}.gl{flex:1;height:30px;border:2px solid var(--line2);background:#fff;border-radius:5px 5px 11px 11px;padding:0;cursor:pointer}.gl.on{background:#7fc4e8;border-color:#4fa3d1}.gl:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .stack{display:flex;flex-direction:column;gap:16px}.stack>.card{flex:1}.stack.cmp{align-self:start}@media(min-width:681px) and (max-width:1000px){.hello,.tiles{order:-3}.rmc{order:-2}.mdc{order:-1}.stack.cmp{grid-column:span 12;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}}.stack.cmp>.card{flex:none}
 .sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .swb{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;font-weight:600;font-size:13px;text-align:left}
@@ -224,6 +225,7 @@ function defaults(){return{
  ],
  done:{},
  up:[],
+ water:{},
  salary:{'10':30000,'25':30000},
  pay:{'10':10,'25':25},pays:2,cur:'₱',
  bills:[
@@ -583,6 +585,12 @@ function upcomingCard(){
  +(rows||(UI.upAdd?'':'<div class="muted" style="font-size:12.5px">Nothing ahead.</div>'))+form+'</section>';
 }
 
+function waterCard(dk){
+ const n=Math.min(8,(S.water&&S.water[dk])||0);
+ return '<section class="card mini"><div class="ch" style="margin:0 0 6px"><h2 style="font-size:14px;margin:0">Water</h2><span class="chip">'+n+'/8 glasses</span></div><div class="gls" role="group" aria-label="Glasses of water">'
+ +Array.from({length:8},(_,i)=>'<button class="gl'+(i<n?' on':'')+'" data-a="water" data-n="'+(i+1)+'" aria-pressed="'+(i<n)+'" aria-label="Glass '+(i+1)+'"></button>').join('')+'</div></section>';
+}
+
 function workoutBlock(dow,dk,compact){
  const w=S.workouts[dow]||{title:'Rest day',ex:''};
  if(UI.editW===dow){
@@ -748,7 +756,7 @@ function dayView(){
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
- +remindersCard(dk,isToday)+'<div class="s4 stack cmp">'+upcomingCard()+workoutCard(D,dk,isToday)+'</div>'+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
+ +remindersCard(dk,isToday)+'<div class="s4 stack cmp">'+upcomingCard()+workoutCard(D,dk,isToday)+waterCard(dk)+'</div>'+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+(single()?'':moneyPanel(ymKey(D),'25'))
  +truthCard(S.thoughts.filter(t=>t.d===dk),[dk],'day')+thoughtCard(dk)+'</div>';
@@ -948,6 +956,7 @@ document.addEventListener('click',e=>{
  if(a==='editRem'){UI.editRem=!UI.editRem;render();return}
  if(a==='upAdd'){UI.upAdd=!UI.upAdd;render();return}
  if(a==='upAll'){UI.upAll=!UI.upAll;render();return}
+ if(a==='water'){const n=+t.dataset.n;S.water=S.water||{};S.water[dk]=(S.water[dk]||0)===n?n-1:n;commit();return}
  if(a==='tickUp'){const u=(S.up||[]).find(u=>u.id===id);if(u){if(u.x)delete u.x;else u.x=key(new Date())}commit();return}
  if(a==='delUp'){S.up=(S.up||[]).filter(u=>u.id!==id);commit();return}
  if(a==='addUp'){const l=val('newUp').trim(),d=val('newUpD');if(!l||!d||d<key(new Date()))return;(S.up=S.up||[]).push({id:uid(),d,l});UI.upAdd=false;commit();return}
