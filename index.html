@@ -221,6 +221,7 @@ function defaults(){return{
  ],
  done:{},
  salary:{'10':30000,'25':30000},
+ pay:{'10':10,'25':25},
  bills:[
   {id:'b1',n:'Rent',a:8000,pay:'10'},
   {id:'b2',n:'Electricity',a:2500,pay:'10'},
@@ -453,8 +454,10 @@ function tick(){
 }
 
 /* ---------- calculations ---------- */
-function periodFor(d){const day=d.getDate();if(day>=25)return[ymKey(d),'25'];if(day>=10)return[ymKey(d),'10'];return[ymKey(new Date(d.getFullYear(),d.getMonth()-1,1)),'25']}
-function nextPayday(){const t=mid(new Date());const day=t.getDate();let d;if(day<10)d=new Date(t.getFullYear(),t.getMonth(),10,12);else if(day<25)d=new Date(t.getFullYear(),t.getMonth(),25,12);else d=new Date(t.getFullYear(),t.getMonth()+1,10,12);return d}
+function ordn(n){return n%100>=11&&n%100<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th')}
+function payDay(w){const v=Math.round(+((S.pay||{})[w]));return v>=1&&v<=28?v:+w}
+function periodFor(d){const day=d.getDate();if(day>=payDay('25'))return[ymKey(d),'25'];if(day>=payDay('10'))return[ymKey(d),'10'];return[ymKey(new Date(d.getFullYear(),d.getMonth()-1,1)),'25']}
+function nextPayday(){const t=mid(new Date());const day=t.getDate();const a=payDay('10'),b=payDay('25');let d;if(day<a)d=new Date(t.getFullYear(),t.getMonth(),a,12);else if(day<b)d=new Date(t.getFullYear(),t.getMonth(),b,12);else d=new Date(t.getFullYear(),t.getMonth()+1,a,12);return d}
 function daysUntil(d){return Math.round((mid(d)-mid(new Date()))/864e5)}
 function calc(ym,which){
  const sal=+S.salary[which]||0;
@@ -579,7 +582,7 @@ function moodCard(dk,isToday){
 function moneyPanel(ym,which,cls){
  const c=calc(ym,which);
  const[y,mo]=ym.split('-').map(Number);
- const pd=new Date(y,mo-1,+which,12);
+ const pd=new Date(y,mo-1,payDay(which),12);
  const dd=daysUntil(pd);
  const chip=dd>0?'Payday in '+dd+' day'+(dd>1?'s':''):dd===0?'Payday today 🎉':'Received';
  const over=c.left<0;
@@ -588,8 +591,8 @@ function moneyPanel(ym,which,cls){
  const wLeft=Math.max(0,100-wPaid-wUn);
  const rows=c.bills.map(b=>{const p=!!c.pm[b.id];return '<div class="bill'+(p?' paid':'')+'">'+ckBtn(p,'data-a="paid" data-p="'+which+'" data-ym="'+ym+'" data-id="'+b.id+'"',(p?'Unmark ':'Mark ')+b.n+' paid','sm')
   +'<input class="in" data-c="bn" data-id="'+b.id+'" value="'+esc(b.n)+'" aria-label="Bill name"><input class="in amt" type="number" inputmode="decimal" min="0" data-c="ba" data-id="'+b.id+'" value="'+(+b.a||0)+'" aria-label="Amount for '+esc(b.n)+'"><span class="pc">'+(c.sal?pct((+b.a||0)/c.sal*100):'')+'</span><button class="x" data-a="delBill" data-id="'+b.id+'" aria-label="Delete '+esc(b.n)+'">✕</button></div>'}).join('');
- return '<section class="card money '+(cls||'s6')+'"><div class="mh"><div><h2>'+MON[mo-1]+' '+which+' paycheck</h2><span class="chip">'+chip+'</span></div>'
- +'<label class="sal">Salary <input class="in" type="number" inputmode="decimal" min="0" data-c="sal" data-p="'+which+'" value="'+c.sal+'"></label></div>'
+ return '<section class="card money '+(cls||'s6')+'"><div class="mh"><div><h2>'+MON[mo-1]+' '+payDay(which)+' paycheck</h2><span class="chip">'+chip+'</span></div>'
+ +'<div class="stack" style="gap:6px"><label class="sal">Salary <input class="in" type="number" inputmode="decimal" min="0" data-c="sal" data-p="'+which+'" value="'+c.sal+'"></label><label class="sal">Payday (day of month) <input class="in" type="number" inputmode="numeric" min="1" max="28" data-c="payday" data-p="'+which+'" value="'+payDay(which)+'"></label></div></div>'
  +'<div class="big"><b class="'+(over?'neg':'')+'">'+pct(c.pct)+'</b><span>'+(over?'over budget by '+peso(-c.left):'left after all bills')+' <span class="muted">· '+peso(c.left)+' of '+peso(c.sal)+'</span></span></div>'
  +'<div class="bar" role="img" aria-label="'+pct(c.paidPct)+' paid, '+pct(c.sal?c.unpaid/c.sal*100:0)+' still to pay, '+pct(Math.max(0,c.pct))+' left"><i style="width:'+wPaid+'%;background:var(--prid)"></i><i style="width:'+wUn+'%;background:var(--pri)"></i><i style="width:'+wLeft+'%;background:var(--pink2)"></i></div>'
  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(c.paid)+' ('+pct(c.paidPct)+')</span><span><u style="background:var(--pri)"></u>To pay '+peso(c.unpaid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,c.left))+'</span></div>'
@@ -683,7 +686,7 @@ function dayView(){
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
- +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
+ +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
  +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
@@ -865,6 +868,7 @@ document.addEventListener('change',e=>{
  if(c==='name'){S.name=t.value.trim().slice(0,30);commit();return}
  if(c==='remL'){const r=S.rems.find(r=>r.id===id);if(r&&t.value.trim()){r.l=t.value.trim();save()}return}
  if(c==='remT'){const r=S.rems.find(r=>r.id===id);if(r&&t.value){r.t=t.value;commit()}return}
+ if(c==='payday'){const w=t.dataset.p;let v=Math.round(parseFloat(t.value));if(!(v>=1))v=+w;v=Math.min(28,Math.max(1,v));S.pay=Object.assign({'10':10,'25':25},S.pay||{});if(w==='10'&&v>=payDay('25'))v=payDay('25')-1;if(w==='25'&&v<=payDay('10'))v=payDay('10')+1;S.pay[w]=v;commit();return}
  if(c==='sal'){S.salary[t.dataset.p]=Math.max(0,parseFloat(t.value)||0);commit();return}
  if(c==='bn'){const b=S.bills.find(b=>b.id===id);if(b){b.n=t.value.trim()||b.n;S.sampleBills=false;commit()}return}
  if(c==='ba'){const b=S.bills.find(b=>b.id===id);if(b){b.a=Math.max(0,parseFloat(t.value)||0);S.sampleBills=false;commit()}return}
