@@ -294,7 +294,7 @@ async function initCloud(){
   AUTH.auth.getRedirectResult().catch(()=>{});
   AUTH.auth.onAuthStateChanged(u=>{
    AUTH.user=u;
-   if(!u){ref=null;setSync('signedout');render();const m=/[#&]v=([^&]+)/.exec(location.hash||'');if(m&&!READONLY){try{vwOpen(decodeURIComponent(m[1]))}catch(_){}}return}
+   if(!u){ref=null;setSync('signedout');render();const m=/[#&]v=([^&]+)/.exec(location.hash||'');if(!m&&/[#&]view(&|$)/.test(location.hash||'')&&!READONLY){SHP='view';render()}if(m&&!READONLY){try{vwOpen(decodeURIComponent(m[1]))}catch(_){}}return}
    attach(fs.collection('users').doc(u.uid).collection('data').doc('state')).catch(()=>{ref=null;setSync('error');render()});
   });
   setSync('signedout');render();

@@ -130,7 +130,7 @@ Press **Set password** to ask for a password each time the page opens on that de
 
 ## Sharing a view-only copy
 
-This needs Option 3 (Firebase). Sign in, press **Share**, pick a code (6+ characters) and choose whether to show money and thoughts. After you start sharing, press **Copy link** and send it. Friends who open that link see your dashboard right away. They can also open the normal page, press **View with code** and type it. Nothing is remembered on their device, and they can't edit anything.
+This needs Option 3 (Firebase). Sign in, press **Share**, pick a code (6+ characters) and choose whether to show money and thoughts. After you start sharing, press **Copy link** and send it. Friends who open that link see your dashboard right away. You can also send `…/my-day/#view`, which asks them for the code as soon as it opens. They can also open the normal page, press **View with code** and type it. Nothing is remembered on their device, and they can't edit anything.
 
 Add this to your Firestore rules, next to the `users` rule, then press Publish:
 
