@@ -327,7 +327,7 @@ function sharePanel(){
   +'<div class="msg" id="vw-msg" role="alert">'+esc(SHNOTE)+'</div>'
   +'<div class="row"><button class="btn sm" data-a="vw-open">Open</button><button class="btn sm ghost" data-a="vwmenu">Close</button></div></div>'}
  return ''}
-const ROK=new Set(['view','nav','ro-exit','refresh']);
+const ROK=new Set(['view','nav','ro-exit','refresh','truthrr']);
 function roLock(){const app=document.getElementById('app');if(!app)return;
  app.classList.toggle('ro',READONLY);app.classList.toggle('nomoney',READONLY&&!!S.hideMoney);app.classList.toggle('noth',READONLY&&!!S.hideTh);
  if(!READONLY)return;
@@ -599,6 +599,61 @@ function sampleNote(){
  return S.sampleBills?'<div class="s12 note-sample" data-money="1"><span>These bills are <b>samples</b>. Edit the names and amounts, or clear them and add your own.</span><button class="btn sm" data-a="clearBills">Clear sample bills</button></div>':'';
 }
 
+
+/* ---------- unhinged truth card (rule-based, runs in your browser) ---------- */
+const TR_STOP=new Set("the and for that this with have was but not you are just like about what when they them then than there their from your been will would could really very much more some can too out get got its i'm dont don't i'll ive i've so my me to of in on at is it be as if or do no yes we he she a an am im all one even still also into only because need should want feel think know".split(' '));
+const TR_SAFE=/(kill myself|killing myself|suicid|want to die|wanna die|end my life|end it all|hurt myself|self.?harm|ayoko na mabuhay|gusto ko nang mamatay)/i;
+function truthCard(items,dates,span){
+ if(!items||!items.length)return '';
+ const n=items.length,lab=span==='day'?'today':'this '+span,seed0=(UI.truthN||0);
+ const txt=items.map(t=>t.x).join(' \n '),low=txt.toLowerCase();
+ const head='<section class="card pink s12" data-th="1"><div class="ch"><h2>Unhinged truth card</h2><span class="muted" style="font-size:13px">'+lab+'</span></div>';
+ if(TR_SAFE.test(txt))return head+'<p style="margin:0 0 8px;font-size:15px">Some of what you wrote sounds really heavy, so no roasting this time. I’m glad you got it out of your head.</p><p class="muted" style="margin:0;font-size:13.5px">If you ever feel unsafe or like hurting yourself, please tell someone you trust right now. In the Philippines you can call the NCMH Crisis Hotline at 1553.</p></section>';
+ const c=re=>(low.match(re)||[]).length;
+ const tired=c(/\b(tired|pagod|antok|sleepy|exhaust\w*|burn(ed|t)? ?out|drained|puyat)\b/g),
+  stress=c(/\b(stress\w*|anxi\w*|overthink\w*|worr\w*|panic\w*|overwhelm\w*|kaba|nervous|scared|takot)\b/g),
+  money=c(/(\bmoney\b|\bsalary\b|sahod|\bbills?\b|\bafford\b|\bbroke\b|₱|\bpay(day|ment|ing)?\b|\bgastos\b)/g),
+  work=c(/\b(work|boss|job|hire|hiring|candidates?|interview|meeting|deadline|emails?|inbox|office|client|tat)\b/g),
+  people=c(/\b(love|miss|crush|friend|friends|bf|gf|ex|family|mom|dad|mama|papa|kuya|ate|bestie)\b/g),
+  hope=c(/\b(excited|grateful|happy|proud|thankful|thank|better|win|won|nice|good|masaya|blessed)\b/g),
+  food=c(/\b(eat|ate|food|hungry|gutom|coffee|kape|lunch|dinner|snack|milk tea|diet)\b/g),
+  body=c(/\b(workout|gym|stretch\w*|sore|weight|run|walk|exercise)\b/g),
+  should=c(/\b(should|need to|have to|must|dapat|kailangan)\b/g),
+  q=(txt.match(/\?/g)||[]).length,ex=(txt.match(/!/g)||[]).length;
+ const hrs=items.map(t=>new Date(t.ts).getHours()),late=hrs.filter(h=>h>=23||h<5).length;
+ const bk={morning:0,afternoon:0,evening:0,night:0};hrs.forEach(h=>{bk[h>=5&&h<12?'morning':h>=12&&h<18?'afternoon':h>=18&&h<23?'evening':'night']++});
+ const peak=Object.keys(bk).sort((a,b)=>bk[b]-bk[a])[0];
+ const wc={};(low.match(/[a-zñ']{4,}/g)||[]).forEach(w=>{if(!TR_STOP.has(w))wc[w]=(wc[w]||0)+1});
+ const top=Object.keys(wc).sort((a,b)=>wc[b]-wc[a])[0];
+ const longest=Math.max.apply(null,items.map(t=>t.x.trim().split(/\s+/).length));
+ const ms=moodStats(dates||[]);
+ const L=[];const add=(pr,arr)=>L.push([pr,arr]);
+ if(late>=1)add(late*4+(late>=n/2?6:0),[late+' of '+n+' thought'+(n>1?'s':'')+' came between 11pm and 5am. Your brain does its best work exactly when it should be asleep.',late+' late-night dump'+(late>1?'s':'')+'. The 2am version of you has a lot of opinions and zero supervision.']);
+ if(q>=2)add(q*2+2,['You asked '+q+' questions and answered roughly none of them.','Question marks: '+q+'. Answers: still loading.']);
+ if(top&&wc[top]>=3)add(wc[top]*3,['You said “'+top+'” '+wc[top]+' times. It is living in your head rent-free.','“'+top+'” showed up '+wc[top]+' times. Maybe that is the actual topic here.']);
+ if(should>=2)add(should*3,['You wrote “should”, “need to” or “have to” '+should+' times. Who keeps assigning you these chores and can we fire them?','That is '+should+' “shoulds”. You are being bossed around by your own brain.']);
+ if(tired>=1)add(tired*4,['Tired came up '+tired+' time'+(tired>1?'s':'')+'. It is not a personality, bestie, it is a sleep schedule.','You mentioned being tired '+tired+'x. Your body filed a complaint. Please read it.']);
+ if(stress>=1)add(stress*4,['Overthinking detected ('+stress+' signal'+(stress>1?'s':'')+'). Your brain opened 47 tabs and one of them is playing music.','Stress words: '+stress+'. Your mind is running a full-time job with no break.']);
+ if(money>=1)add(money*3,['Money crossed your mind '+money+' time'+(money>1?'s':'')+'. Payday is doing a lot of emotional labor.','Finance thoughts: '+money+'. Your wallet and your anxiety are in a group chat.']);
+ if(work>=1)add(work*3,['Work took '+work+' spot'+(work>1?'s':'')+' in your head. Your job is renting space and not paying.','Work came up '+work+'x. Clocking out in your mind is also a skill.']);
+ if(people>=1)add(people*3,[people+' thought'+(people>1?'s':'')+' about other people. Free therapy for them, zero rent for you.','People appear in your head '+people+'x. You are the group chat’s unpaid therapist.']);
+ if(hope>=2)add(hope*3,['Plot twist: '+hope+' positive thoughts. Suspicious. Do not stop.','You wrote '+hope+' good-vibes words. Who are you and what did you do with the overthinker?']);
+ if(food>=1)add(food*3,['Food or coffee came up '+food+'x. Honestly the correct priorities.','Snack thoughts: '+food+'. Your stomach has the loudest voice in this dump.']);
+ if(body>=1)add(body*2,['Movement came up '+body+'x. Thinking about exercise counts as cardio only in your dreams.','You wrote about moving your body '+body+'x. Now the body has to attend the meeting too.']);
+ if(ex>=3)add(ex,[ex+' exclamation marks. Either pure joy or pure chaos, and we cannot tell which.']);
+ if(longest>=50)add(Math.min(longest/5,12),['One thought was '+longest+' words long. That was not a thought, that was a podcast.']);
+ if(ms.n&&ms.avg>=4&&(stress+tired)>=2)add(8,['Your mood taps say “good” but your thoughts say “help”. Pick a lane.']);
+ if(ms.n&&ms.avg<2.6)add(9,['Your mood average is '+ms.avg.toFixed(1)+'. Be gentle with yourself first, then drink water.']);
+ if(!ms.n&&n>=2)add(2,['You wrote thoughts but never logged your mood. Mysterious. Suspicious. Very you.']);
+ add(1,['Most of your thoughts arrive in the '+peak+'. Your brain has office hours.']);
+ if(n>=10)add(5,[n+' thoughts '+lab+'. You are basically publishing a diary.']);
+ if(n<3)add(20,['Only '+n+' thought'+(n>1?'s':'')+'. Not enough evidence to roast you properly. Keep dumping and I will get meaner.']);
+ L.sort((a,b)=>b[0]-a[0]);
+ const lines=L.slice(0,n<3?1:4).map((x,i)=>x[1][(seed0+n+i)%x[1].length]);
+ let arc=['Certified Human','🫠'];
+ if(n>=3){const m=[[late>=Math.max(2,n/2),'The 2AM Philosopher','🌙'],[stress>=2&&stress>=tired,'The Professional Overthinker','🌀'],[tired>=2,'Tired But Trying','🥱'],[money>=2,'Budget Goblin','💸'],[work>=3,'Employee of the Month (Unpaid)','📎'],[people>=3,'Main Character With a Group Chat','💬'],[hope>=3,'Suspiciously Okay','🌤️'],[q>=3,'The Question Mark Collector','❓'],[should>=3,'Self-Appointed Manager of Your Own Life','📋']].filter(x=>x[0]);if(m.length)arc=[m[seed0%m.length][1],m[seed0%m.length][2]]}
+ return head+'<div class="tr"><div style="font-size:22px;font-weight:700;margin:0 0 8px">'+arc[1]+' '+esc(arc[0])+'</div>'+lines.map(x=>'<p style="margin:6px 0;font-size:15px">'+esc(x)+'</p>').join('')
+  +'<div class="row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" data-a="truthrr">Another take</button><span class="muted" style="font-size:12.5px">Made from your words only. For fun, not therapy.</span></div></div></section>'}
 function thoughtsList(items,showDate){
  if(!items.length)return '<div class="empty">Nothing here yet.</div>';
  return items.map(t=>{const d=new Date(t.ts);return '<div class="th"><p>'+esc(t.x)+'</p><small>'+(showDate?shortDate(new Date(t.d.split('-')[0],t.d.split('-')[1]-1,t.d.split('-')[2]))+' · ':'')+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</small><button class="x" data-a="delThought" data-id="'+t.id+'" aria-label="Delete thought">✕</button></div>'}).join('');
@@ -631,7 +686,7 @@ function dayView(){
  +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
- +thoughtCard(dk)+'</div>';
+ +truthCard(S.thoughts.filter(t=>t.d===dk),[dk],'day')+thoughtCard(dk)+'</div>';
 }
 
 function weekDates(D){const dow=(D.getDay()+6)%7;const s=addDays(D,-dow);return Array.from({length:7},(_,i)=>addDays(s,i))}
@@ -662,7 +717,7 @@ function weekView(){
  const money=moneyPanel(pym,pw,'s5');
  const th=S.thoughts.filter(t=>t.d>=keys[0]&&t.d<=keys[6]).sort((a,b)=>b.ts-a.ts);
  const thoughts='<section class="card s12" data-th="1"><div class="ch"><h2>Thoughts this week</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div>'+thoughtsList(th,true)+'</section>';
- return '<div class="grid">'+habits+workouts+mood+sampleNote()+money+thoughts+'</div>';
+ return '<div class="grid">'+habits+workouts+mood+sampleNote()+money+truthCard(th,keys,'week')+thoughts+'</div>';
 }
 
 function calGrid(ym,fn){
@@ -702,7 +757,7 @@ function monthView(){
  const q=(document.getElementById('tq')||{}).value||'';
  const shown=th.filter(t=>t.x.toLowerCase().includes(q.toLowerCase())).slice(0,60);
  const thoughts='<section class="card s7" data-th="1"><div class="ch"><h2>Thoughts this month</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div><input class="in" id="tq" data-keep="tq" placeholder="Search thoughts…" aria-label="Search thoughts" style="margin-bottom:6px">'+thoughtsList(shown,true)+'</section>';
- return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+moneyPanel(ym,'25')+habits+mood+workouts+thoughts+'</div>';
+ return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+moneyPanel(ym,'25')+habits+mood+workouts+truthCard(th,all,'month')+thoughts+'</div>';
 }
 
 function gateScreen(){document.title='pbb-day';
@@ -760,6 +815,7 @@ document.addEventListener('click',e=>{
  if(a==='sh-copy'){const t=SHLINK;try{navigator.clipboard.writeText(t).then(()=>{SHNOTE='Link copied.';render()},()=>{const e=document.getElementById('sh-link');if(e){e.select()}})}catch(_){const e=document.getElementById('sh-link');if(e)e.select()}return}
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
+ if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
  if(a==='thmenu'){THPANEL=!THPANEL;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
