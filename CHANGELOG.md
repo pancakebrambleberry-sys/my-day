@@ -5,7 +5,7 @@ Every improvement to pbb-day is listed here, newest first. Each entry says what 
 ## Nov 23, 2026
 
 ### Added
-- **Coming up.** A new card on the Day view for things that happen on a certain date, like a dentist visit or a birthday. Type what it is, pick the date and press Add. It shows how many days are left, is highlighted on the day itself and mentioned in the greeting, then disappears the next day. Past dates can't be added, and you can remove one early with the ✕.
+- **Coming up.** A new card on the Day view for things that happen on a certain date, like a dentist visit or a birthday. Type what it is, pick the date and press Add. It shows how many days are left, is highlighted on the day itself and mentioned in the greeting, then disappears the next day. Past dates can't be added, and you can remove one early with the ✕. The card is small: it shows three items (with a "+ more" button) and the add form opens only when you press "+ Add".
 - **First-time welcome.** A new person is asked for their name, currency, how often they are paid, payday dates and salary before the dashboard opens, so they start with their own numbers, not example figures. They can skip it, or press "Have a code?" to view a shared dashboard. People who already have data are never asked, and a new device that signs in to an existing account loads the cloud data instead of starting blank.
 - **Share a view-only copy.** Press **Share**, and friends can see your dashboard but not change it. You get a link with the code inside, and friends can also open the `#view` link and type the code. Money and thoughts are hidden unless you include them. **Stop sharing** switches it off.
 - **Unhinged truth card.** A playful summary of your thoughts for the day, week or month. It uses only your own words and runs in your browser. If your thoughts sound heavy, it shows a kind message instead of a joke.
@@ -15,6 +15,7 @@ Every improvement to pbb-day is listed here, newest first. Each entry says what 
 - **Paycheck settings.** Choose one or two paychecks a month, and set the payday dates yourself (set the second payday to 0 for none). Paydays on the 29th to 31st use the last day of shorter months.
 
 ### Changed
+- **Smaller workout card.** Today's workout now shows just the name, a one-line list of exercises and the Done button. Press Edit to see or change everything. It sits in the same space as Coming up, so the Day view is less crowded.
 - The default reminders are now general: Stretch, Drink 8 glasses of water and Workout.
 - Opening one top menu now closes the others. Esc closes them too.
 - The password lock accepts a password with or without a stray space, and phone keyboards no longer capitalize or auto-correct the box.
