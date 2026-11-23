@@ -453,8 +453,9 @@ function wkInfo(mon){
  const tk=key(new Date());const days=Array.from({length:7},(_,i)=>key(addDays(mon,i)));
  const rest=k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()]||{title:'Rest day'};return /rest/i.test(w.title)};
  const plan=days.filter(k=>!rest(k)),due=plan.filter(k=>k<=tk);
- const did=days.filter(k=>S.wdone[k]).length,missed=due.filter(k=>!S.wdone[k]).length;
- const hit=did>0&&missed===0;return{hit,did,full:hit&&due.length===plan.length}
+ const did=days.filter(k=>S.wdone[k]).length;
+ const need=Math.max(1,Math.min(3,plan.length));
+ const hit=did>=need;return{hit,did,full:hit&&did>=plan.length}
 }
 function wkStreak(){
  let m=weekDates(new Date())[0],n=0,act=0;const cur=wkInfo(m);if(cur.hit){n++;act+=cur.did}
@@ -474,7 +475,7 @@ function workoutMonth(D){
    h+='<button class="d'+(done?' on':'')+(inM?'':' out')+(fut&&!done?' fut':'')+(k===tk?' tdy':'')+'" '+(inM&&!fut?'data-a="wtog" data-k="'+k+'" aria-pressed="'+done+'" ':'disabled ')+'aria-label="'+d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+(done?', workout done':'')+'">'+(done?'✓':d.getDate())+'</button>'}
   const wi=wkInfo(mon);h+='<span class="k'+(wi.full?' on':wi.hit?' half':'')+'">'+(wi.full?'✓':'')+'</span>';
   mon=addDays(mon,7)}
- return h+'</div><p class="muted" style="margin:14px 0 0;font-size:13px">Mark today’s workout done and it fills in here. Tap a past day to fix it. A week counts toward your streak when you finish every workout planned that week.</p></section>'
+ return h+'</div><p class="muted" style="margin:14px 0 0;font-size:13px">Mark today’s workout done and it fills in here. Tap a past day to fix it. A week counts toward your streak when you finish at least 3 workouts in it (or all of them, if you plan fewer than 3).</p></section>'
 }
 function workoutCard(D,dk,isToday){
  const dow=D.getDay();const done=!!S.wdone[dk];
