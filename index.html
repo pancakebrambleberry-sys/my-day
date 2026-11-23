@@ -196,7 +196,9 @@ const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const ymKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1);
 const mid=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);
 const addDays=(d,n)=>{const x=mid(d);x.setDate(x.getDate()+n);return x};
-const peso=n=>(n<0?'-':'')+'₱'+Math.round(Math.abs(n)).toLocaleString('en-PH');
+const peso=n=>(n<0?'-':'')+((typeof S!=='undefined'&&S.cur)||'₱')+Math.round(Math.abs(n)).toLocaleString('en-US');
+const curSym=()=>S.cur||'₱';
+const single=()=>S.pays===1;
 const pct=n=>Math.round(n)+'%';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -221,7 +223,7 @@ function defaults(){return{
  ],
  done:{},
  salary:{'10':30000,'25':30000},
- pay:{'10':10,'25':25},
+ pay:{'10':10,'25':25},pays:2,cur:'₱',
  bills:[
   {id:'b1',n:'Rent',a:8000,pay:'10'},
   {id:'b2',n:'Electricity',a:2500,pay:'10'},
@@ -369,7 +371,17 @@ function applyTheme(name){
  try{const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t.bg);
   const ic=document.querySelector('link[rel=icon]');if(ic)ic.setAttribute('href','data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='"+t.pri+"'/><circle cx='32' cy='32' r='11' fill='"+t.bg+"'/><g stroke='"+t.bg+"' stroke-width='5' stroke-linecap='round'><path d='M32 8v7M32 49v7M8 32h7M49 32h7M15 15l5 5M44 44l5 5M49 15l-5 5M20 44l-5 5'/></g></svg>"))}catch(_){}
 }
-let THPANEL=false;
+let THPANEL=false,MNPANEL=false;
+const CURS=['₱','$','€','£','¥','₹','₩','RM','S$','A$','C$','HK$','NT$','Rp','฿','₫','R','CHF','kr','AED'];
+function moneyBtn(){return '<button class="btn sm ghost" data-a="mnmenu">Money</button>'}
+function moneyPanelSet(){if(!MNPANEL)return '';
+ return '<div class="lkp"><h3>Money settings</h3><p>Set this to match how you get paid.</p>'
+  +'<label>Currency symbol <input class="in" list="curs" data-c="cur" value="'+esc(curSym())+'" maxlength="4" style="width:90px;margin:0 0 0 6px" aria-label="Currency symbol"></label><datalist id="curs">'+CURS.map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>'
+  +'<label>Paychecks per month <select class="in" data-c="pays" style="width:auto;margin:0 0 0 6px"><option value="1"'+(single()?' selected':'')+'>1 (once a month)</option><option value="2"'+(single()?'':' selected')+'>2 (twice a month)</option></select></label>'
+  +'<label>Payday <input class="in" type="number" min="1" max="31" data-c="payday" data-p="10" value="'+payDay('10')+'" style="width:80px;margin:0 0 0 6px" aria-label="First payday"></label>'
+  +(single()?'':'<label>Second payday (0 = none) <input class="in" type="number" min="0" max="31" data-c="payday" data-p="25" value="'+payDay('25')+'" style="width:80px;margin:0 0 0 6px" aria-label="Second payday"></label>')
+  +'<p style="margin:6px 0 8px">Months with fewer days use their last day (a 31st payday lands on the 30th or 28th). With one paycheck, all your bills count against it.</p>'
+  +'<div class="row"><button class="btn sm ghost" data-a="mnmenu">Close</button></div></div>'}
 function themeBtn(){return '<button class="btn sm ghost" data-a="thmenu">Theme</button>'}
 function themePanel(){if(!THPANEL)return '';const cur=S.theme||'yellow';
  return '<div class="lkp"><h3>Choose a color</h3><p>Saved to your account, so it follows you to your other devices.</p><div class="sw">'
@@ -455,13 +467,19 @@ function tick(){
 
 /* ---------- calculations ---------- */
 function ordn(n){return n%100>=11&&n%100<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th')}
-function payDay(w){const v=Math.round(+((S.pay||{})[w]));return v>=1&&v<=28?v:+w}
-function periodFor(d){const day=d.getDate();if(day>=payDay('25'))return[ymKey(d),'25'];if(day>=payDay('10'))return[ymKey(d),'10'];return[ymKey(new Date(d.getFullYear(),d.getMonth()-1,1)),'25']}
-function nextPayday(){const t=mid(new Date());const day=t.getDate();const a=payDay('10'),b=payDay('25');let d;if(day<a)d=new Date(t.getFullYear(),t.getMonth(),a,12);else if(day<b)d=new Date(t.getFullYear(),t.getMonth(),b,12);else d=new Date(t.getFullYear(),t.getMonth()+1,a,12);return d}
+function payDay(w){const v=Math.round(+((S.pay||{})[w]));return v>=1&&v<=31?v:+w}
+function effDay(w,y,m0){return Math.min(payDay(w),new Date(y,m0+1,0).getDate())}
+function periodFor(d){const day=d.getDate(),y=d.getFullYear(),m=d.getMonth();
+ if(!single()&&day>=effDay('25',y,m))return[ymKey(d),'25'];
+ if(day>=effDay('10',y,m))return[ymKey(d),'10'];
+ const pd=new Date(y,m-1,1);return[ymKey(pd),single()?'10':'25']}
+function nextPayday(){const t=mid(new Date());const day=t.getDate(),y=t.getFullYear(),m=t.getMonth();let d;
+ const a=effDay('10',y,m),b=effDay('25',y,m);
+ if(day<a)d=new Date(y,m,a,12);else if(!single()&&day<b)d=new Date(y,m,b,12);else d=new Date(y,m+1,effDay('10',y,m+1),12);return d}
 function daysUntil(d){return Math.round((mid(d)-mid(new Date()))/864e5)}
 function calc(ym,which){
- const sal=+S.salary[which]||0;
- const bills=S.bills.filter(b=>b.pay===which);
+ const sal=(single()&&which==='25')?0:(+S.salary[which]||0);
+ const bills=single()?(which==='10'?S.bills:[]):S.bills.filter(b=>b.pay===which);
  const pm=S.paid[ym+'-'+which]||{};
  let total=0,paid=0;
  bills.forEach(b=>{const a=+b.a||0;total+=a;if(pm[b.id])paid+=a});
@@ -582,7 +600,7 @@ function moodCard(dk,isToday){
 function moneyPanel(ym,which,cls){
  const c=calc(ym,which);
  const[y,mo]=ym.split('-').map(Number);
- const pd=new Date(y,mo-1,payDay(which),12);
+ const pd=new Date(y,mo-1,effDay(which,y,mo-1),12);
  const dd=daysUntil(pd);
  const chip=dd>0?'Payday in '+dd+' day'+(dd>1?'s':''):dd===0?'Payday today 🎉':'Received';
  const over=c.left<0;
@@ -592,12 +610,12 @@ function moneyPanel(ym,which,cls){
  const rows=c.bills.map(b=>{const p=!!c.pm[b.id];return '<div class="bill'+(p?' paid':'')+'">'+ckBtn(p,'data-a="paid" data-p="'+which+'" data-ym="'+ym+'" data-id="'+b.id+'"',(p?'Unmark ':'Mark ')+b.n+' paid','sm')
   +'<input class="in" data-c="bn" data-id="'+b.id+'" value="'+esc(b.n)+'" aria-label="Bill name"><input class="in amt" type="number" inputmode="decimal" min="0" data-c="ba" data-id="'+b.id+'" value="'+(+b.a||0)+'" aria-label="Amount for '+esc(b.n)+'"><span class="pc">'+(c.sal?pct((+b.a||0)/c.sal*100):'')+'</span><button class="x" data-a="delBill" data-id="'+b.id+'" aria-label="Delete '+esc(b.n)+'">✕</button></div>'}).join('');
  return '<section class="card money '+(cls||'s6')+'"><div class="mh"><div><h2>'+MON[mo-1]+' '+payDay(which)+' paycheck</h2><span class="chip">'+chip+'</span></div>'
- +'<div class="stack" style="gap:6px"><label class="sal">Salary <input class="in" type="number" inputmode="decimal" min="0" data-c="sal" data-p="'+which+'" value="'+c.sal+'"></label><label class="sal">Payday (day of month) <input class="in" type="number" inputmode="numeric" min="1" max="28" data-c="payday" data-p="'+which+'" value="'+payDay(which)+'"></label></div></div>'
+ +'<div class="stack" style="gap:6px"><label class="sal">Salary <input class="in" type="number" inputmode="decimal" min="0" data-c="sal" data-p="'+which+'" value="'+c.sal+'"></label><label class="sal">Payday (day of month)'+(which==='25'?' <small class="muted">0 = none</small>':'')+' <input class="in" type="number" inputmode="numeric" min="'+(which==='25'?0:1)+'" max="31" data-c="payday" data-p="'+which+'" value="'+payDay(which)+'"></label></div></div>'
  +'<div class="big"><b class="'+(over?'neg':'')+'">'+pct(c.pct)+'</b><span>'+(over?'over budget by '+peso(-c.left):'left after all bills')+' <span class="muted">· '+peso(c.left)+' of '+peso(c.sal)+'</span></span></div>'
  +'<div class="bar" role="img" aria-label="'+pct(c.paidPct)+' paid, '+pct(c.sal?c.unpaid/c.sal*100:0)+' still to pay, '+pct(Math.max(0,c.pct))+' left"><i style="width:'+wPaid+'%;background:var(--prid)"></i><i style="width:'+wUn+'%;background:var(--pri)"></i><i style="width:'+wLeft+'%;background:var(--pink2)"></i></div>'
  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(c.paid)+' ('+pct(c.paidPct)+')</span><span><u style="background:var(--pri)"></u>To pay '+peso(c.unpaid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,c.left))+'</span></div>'
  +(rows||'<div class="empty">No bills for this paycheck yet.</div>')
- +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="₱ amt" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
+ +'<div class="addrow"><input class="in" data-keep="nb-'+which+'" placeholder="New bill…" aria-label="New bill name"><input class="in" style="flex:0 0 96px" type="number" inputmode="decimal" min="0" data-keep="na-'+which+'" placeholder="'+esc(curSym())+' amt" aria-label="New bill amount"><button class="btn sm" data-a="addBill" data-p="'+which+'">Add</button></div></section>';
 }
 function sampleNote(){
  return S.sampleBills?'<div class="s12 note-sample" data-money="1"><span>These bills are <b>samples</b>. Edit the names and amounts, or clear them and add your own.</span><button class="btn sm" data-a="clearBills">Clear sample bills</button></div>':'';
@@ -689,7 +707,7 @@ function dayView(){
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
  +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
- +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
+ +moneyPanel(ymKey(D),'10')+(single()?'':moneyPanel(ymKey(D),'25'))
  +truthCard(S.thoughts.filter(t=>t.d===dk),[dk],'day')+thoughtCard(dk)+'</div>';
 }
 
@@ -742,7 +760,7 @@ function monthView(){
  const wP=inc?Math.min(100,paid/inc*100):0,wU=inc?Math.max(0,Math.min(100-wP,(bills-paid)/inc*100)):0,wL=Math.max(0,100-wP-wU);
  const sum='<section class="card s12" data-money="1"><div class="ch"><h2>Money this month</h2><span class="muted">Each paycheck is tracked separately below</span></div><div class="big"><b class="'+(left<0?'neg':'')+'">'+pct(lp)+'</b><span>'+(left<0?'over budget by '+peso(-left):'of the month’s pay left after all bills')+' <span class="muted">· '+peso(left)+' of '+peso(inc)+'</span></span></div>'
   +'<div class="bar" role="img" aria-label="Month: '+pct(inc?paid/inc*100:0)+' paid, '+pct(Math.max(0,lp))+' left"><i style="width:'+wP+'%;background:var(--prid)"></i><i style="width:'+wU+'%;background:var(--pri)"></i><i style="width:'+wL+'%;background:var(--pink2)"></i></div>'
-  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(paid)+'</span><span><u style="background:var(--pri)"></u>To pay '+peso(bills-paid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,left))+'</span><span class="muted">10th: '+pct(c1.pct)+' left · 25th: '+pct(c2.pct)+' left</span></div></section>';
+  +'<div class="legend"><span><u style="background:var(--prid)"></u>Paid '+peso(paid)+'</span><span><u style="background:var(--pri)"></u>To pay '+peso(bills-paid)+'</span><span><u style="background:var(--pink2)"></u>Left '+peso(Math.max(0,left))+'</span><span class="muted">'+(single()?'':payDay('10')+ordn(payDay('10'))+': '+pct(c1.pct)+' left · '+payDay('25')+ordn(payDay('25'))+': '+pct(c2.pct)+' left')+'</span></div></section>';
  const sorted=S.rems.slice().sort((a,b)=>a.t.localeCompare(b.t));
  const hrows=sorted.map(r=>{const c=el.filter(k=>(S.done[k]||{})[r.id]).length;const p=el.length?c/el.length*100:0;return '<div class="hb"><span class="n">'+esc(r.l)+'</span><span class="tr"><i style="width:'+p+'%"></i></span><span class="v">'+c+'/'+el.length+'</span></div>'}).join('');
  const tot=el.reduce((a,k)=>a+remStats(k).p,0);const hp=el.length?tot/el.length*100:0;
@@ -761,7 +779,7 @@ function monthView(){
  const q=(document.getElementById('tq')||{}).value||'';
  const shown=th.filter(t=>t.x.toLowerCase().includes(q.toLowerCase())).slice(0,60);
  const thoughts='<section class="card s7" data-th="1"><div class="ch"><h2>Thoughts this month</h2><span class="muted">'+th.length+' entr'+(th.length===1?'y':'ies')+'</span></div><input class="in" id="tq" data-keep="tq" placeholder="Search thoughts…" aria-label="Search thoughts" style="margin-bottom:6px">'+thoughtsList(shown,true)+'</section>';
- return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+moneyPanel(ym,'25')+habits+mood+workouts+truthCard(th,all,'month')+thoughts+'</div>';
+ return '<div class="grid">'+sum+sampleNote()+moneyPanel(ym,'10')+(single()?'':moneyPanel(ym,'25'))+habits+mood+workouts+truthCard(th,all,'month')+thoughts+'</div>';
 }
 
 function gateScreen(){document.title='pbb-day';
@@ -785,8 +803,8 @@ function render(){
  document.getElementById('app').innerHTML=
   '<div class="top"><button class="logo" data-a="refresh" title="Refresh" aria-label="Refresh My Day">🌿 My Day</button><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
-  +'</div>'+themeBtn()+shareBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
-  +themePanel()+sharePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
+  +'</div>'+themeBtn()+moneyBtn()+shareBtn()+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
+  +themePanel()+moneyPanelSet()+sharePanel()+lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
  document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!==undefined&&keep[e.dataset.keep]!==''||e.dataset.keep==='newRemT'&&keep.newRemT)e.value=keep[e.dataset.keep]});
  if(fk){const e=document.querySelector('[data-keep="'+fk+'"]');if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
  const st=remStats(key(new Date()));
@@ -822,6 +840,7 @@ document.addEventListener('click',e=>{
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
+ if(a==='mnmenu'){MNPANEL=!MNPANEL;render();return}
  if(a==='thmenu'){THPANEL=!THPANEL;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
@@ -868,7 +887,9 @@ document.addEventListener('change',e=>{
  if(c==='name'){S.name=t.value.trim().slice(0,30);commit();return}
  if(c==='remL'){const r=S.rems.find(r=>r.id===id);if(r&&t.value.trim()){r.l=t.value.trim();save()}return}
  if(c==='remT'){const r=S.rems.find(r=>r.id===id);if(r&&t.value){r.t=t.value;commit()}return}
- if(c==='payday'){const w=t.dataset.p;let v=Math.round(parseFloat(t.value));if(!(v>=1))v=+w;v=Math.min(28,Math.max(1,v));S.pay=Object.assign({'10':10,'25':25},S.pay||{});if(w==='10'&&v>=payDay('25'))v=payDay('25')-1;if(w==='25'&&v<=payDay('10'))v=payDay('10')+1;S.pay[w]=v;commit();return}
+ if(c==='payday'){const w=t.dataset.p;let v=Math.round(parseFloat(t.value));if(w==='25'&&(v===0||t.value.trim()==='')){S.pays=1;commit();return}if(!(v>=1))v=+w;v=Math.min(31,Math.max(1,v));S.pay=Object.assign({'10':10,'25':25},S.pay||{});if(!single()){if(w==='10'&&v>=payDay('25'))v=payDay('25')-1;if(w==='25'&&v<=payDay('10'))v=payDay('10')+1}S.pay[w]=Math.max(1,v);commit();return}
+ if(c==='cur'){const v=t.value.trim().slice(0,4);S.cur=v||'₱';commit();return}
+ if(c==='pays'){S.pays=+t.value===1?1:2;commit();return}
  if(c==='sal'){S.salary[t.dataset.p]=Math.max(0,parseFloat(t.value)||0);commit();return}
  if(c==='bn'){const b=S.bills.find(b=>b.id===id);if(b){b.n=t.value.trim()||b.n;S.sampleBills=false;commit()}return}
  if(c==='ba'){const b=S.bills.find(b=>b.id===id);if(b){b.a=Math.max(0,parseFloat(t.value)||0);S.sampleBills=false;commit()}return}
