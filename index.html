@@ -316,6 +316,9 @@ async function shPush(){if(!S.share||!S.share.h||!AUTH.user||!AUTH.fs)return;
  try{await AUTH.fs.collection('shares').doc(S.share.h).set({owner:AUTH.user.uid,updated:Date.now(),json:JSON.stringify(shSnap())})}catch(e){}}
 async function shDel(h){try{if(h&&AUTH.fs)await AUTH.fs.collection('shares').doc(h).delete()}catch(e){}}
 function shareBtn(){if(!AUTH.enabled)return '';return AUTH.user?'<button class="btn sm ghost" data-a="shmenu">Share</button>':'<button class="btn sm ghost" data-a="vwmenu">View with code</button>'}
+function closePanels(){THPANEL=false;MNPANEL=false;LKPANEL=false;SHP=false}
+function genCode(){const al='abcdefghjkmnpqrstuvwxyz23456789';const r=new Uint32Array(8);try{crypto.getRandomValues(r)}catch(_){for(let i=0;i<8;i++)r[i]=Math.random()*4e9}return Array.from(r).map(x=>al[x%al.length]).join('')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(THPANEL||MNPANEL||LKPANEL||SHP)){closePanels();render()}});
 function shLink(){return S.share&&S.share.code?location.origin+location.pathname+'#v='+encodeURIComponent(S.share.code):''}
 function sharePanel(){
  if(SHP==='share'&&AUTH.user){const on=!!(S.share&&S.share.h);
@@ -825,14 +828,16 @@ document.addEventListener('click',e=>{
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
  if(READONLY&&!ROK.has(a))return;
  if(a==='ro-exit'){vwExit();return}
- if(a==='shmenu'){SHP=SHP==='share'?false:'share';if(SHP===false)SHLINK='';SHNOTE='';SHOK=false;render();return}
- if(a==='vwmenu'){SHP=SHP==='view'?false:'view';SHNOTE='';render();return}
+ if(a==='shmenu'){const open=SHP!=='share';closePanels();SHP=open?'share':false;SHLINK='';SHNOTE='';SHOK=false;
+  if(open&&S.share&&S.share.h&&!S.share.code){(async()=>{const c2=genCode();const old=S.share.h;const h=await shHash(c2);S.share.h=h;S.share.code=c2;commit();await shDel(old);await shPush();SHNOTE='Here is your link. I made a fresh code, because the old one was not saved.';SHOK=true;render()})()}
+  render();return}
+ if(a==='vwmenu'){const open=SHP!=='view';closePanels();SHP=open?'view':false;SHNOTE='';render();return}
  if(a==='sh-save'){(async()=>{
   const code=val('sh-code').trim(),money=!!(document.getElementById('sh-money')||{}).checked,th=!!(document.getElementById('sh-th')||{}).checked;
   const had=S.share&&S.share.h;
   if(code&&code.length<6){SHNOTE='The code needs at least 6 characters.';SHOK=false;render();return}
   let c2=code||(S.share&&S.share.code)||'';
-  if(!c2){const al='abcdefghjkmnpqrstuvwxyz23456789';const r=new Uint32Array(8);try{crypto.getRandomValues(r)}catch(_){for(let i=0;i<8;i++)r[i]=Math.random()*4e9}c2=Array.from(r).map(x=>al[x%al.length]).join('')}
+  if(!c2)c2=genCode();
   let h=had;if(code||!had){h=await shHash(c2);if(had&&had!==h)await shDel(had)}
   S.share={h,code:c2,money,th};commit();await shPush();
   SHNOTE=code||!had?'Sharing is on. Send friends the link below.':'Updated.';SHOK=true;render()})();return}
@@ -840,12 +845,12 @@ document.addEventListener('click',e=>{
  if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
  if(a==='vw-open'){vwOpen(val('vw-code'));return}
  if(a==='truthrr'){UI.truthN=(UI.truthN||0)+1;render();return}
- if(a==='mnmenu'){MNPANEL=!MNPANEL;render();return}
- if(a==='thmenu'){THPANEL=!THPANEL;render();return}
+ if(a==='mnmenu'){const o=!MNPANEL;closePanels();MNPANEL=o;render();return}
+ if(a==='thmenu'){const o=!THPANEL;closePanels();THPANEL=o;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
  if(a==='lk-open'){lkCheck($v('lk-pw')).then(ok=>{if(ok){LOCKED=false;render()}else{const m=document.getElementById('lk-msg');if(m)m.textContent='Wrong password.';const i=document.getElementById('lk-pw');if(i){i.value='';i.focus()}}});return}
- if(a==='lockmenu'){LKPANEL=!LKPANEL;LKNOTE='';LKOK=false;render();return}
+ if(a==='lockmenu'){const o=!LKPANEL;closePanels();LKPANEL=o;LKNOTE='';LKOK=false;render();return}
  if(a==='lk-now'){if(lkGet()){LOCKED=true;LKPANEL=false;render()}return}
  if(a==='lk-save'||a==='lk-remove'){(async()=>{
   const has=!!lkGet();
