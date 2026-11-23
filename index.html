@@ -151,6 +151,17 @@ table.g{width:100%;border-collapse:collapse;font-size:13.5px}
 .lkp h3{margin:0 0 4px;font-size:16px}.lkp p{margin:0 0 10px;font-size:13px;color:#6b5a1e}
 .lkp input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:8px;background:#fffdf3}
 .lkp .row{display:flex;gap:8px;flex-wrap:wrap}.lkp .msg{min-height:16px;font-size:13px;color:#b3261e;margin:0 0 6px}.lkp .msg.ok{color:#2e7d32}
+
+.wm{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 30px;gap:8px 6px;align-items:center;justify-items:center;margin-top:12px}
+.wm .h{font-size:12px;color:#eadcaa;font-weight:700}
+.wm .d{width:100%;max-width:36px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:#4d3e15;color:#eadcaa;border:0;cursor:pointer;padding:0;font-family:inherit}
+.wm .d.on{background:#f5b800;color:#2b2410;font-weight:800}
+.wm .d.out{opacity:.3;cursor:default}.wm .d.fut{background:transparent;border:1px dashed #6e5b22;cursor:default}
+.wm .d.tdy{outline:2px solid #fff6dc;outline-offset:1px}
+.wm .k{width:24px;height:24px;border-radius:50%;border:2px solid #6e5b22;display:flex;align-items:center;justify-content:center;font-size:12px;color:#2b2410}
+.wm .k.half{border-color:#f5b800}.wm .k.on{background:#f5b800;border-color:#f5b800}
+.wm .fl{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:#f5b800;line-height:1}
+.wstats{display:flex;gap:26px;margin-top:6px}.wstats b{display:block;font-size:22px;color:#fff}.wstats span{font-size:12px;color:#eadcaa}
 </style>
 </head>
 <body>
@@ -433,6 +444,33 @@ function workoutBlock(dow,dk,compact){
  const lines=w.ex.split('\n').map(s=>s.trim()).filter(Boolean);
  return '<div class="wt">'+esc(w.title)+'</div>'+(lines.length?'<ul class="wl">'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':'<p class="muted">Nothing planned.</p>');
 }
+function wkInfo(mon){
+ const tk=key(new Date());const days=Array.from({length:7},(_,i)=>key(addDays(mon,i)));
+ const rest=k=>{const[yy,mm,dd]=k.split('-').map(Number);const w=S.workouts[new Date(yy,mm-1,dd).getDay()]||{title:'Rest day'};return /rest/i.test(w.title)};
+ const plan=days.filter(k=>!rest(k)),due=plan.filter(k=>k<=tk);
+ const did=days.filter(k=>S.wdone[k]).length,missed=due.filter(k=>!S.wdone[k]).length;
+ const hit=did>0&&missed===0;return{hit,did,full:hit&&due.length===plan.length}
+}
+function wkStreak(){
+ let m=weekDates(new Date())[0],n=0,act=0;const cur=wkInfo(m);if(cur.hit){n++;act+=cur.did}
+ for(let i=0;i<260;i++){m=addDays(m,-7);const w=wkInfo(m);if(w.hit){n++;act+=w.did}else break}
+ return{n,act}
+}
+function workoutMonth(D){
+ const y=D.getFullYear(),mo=D.getMonth(),tk=key(new Date());
+ const st=wkStreak();
+ let h='<section class="card navy s6"><div class="ch"><h2>'+D.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</h2></div>'
+ +'<div class="wstats"><div><span>Your streak</span><b>'+st.n+' week'+(st.n===1?'':'s')+'</b></div><div><span>Streak workouts</span><b>'+st.act+'</b></div></div>'
+ +'<div class="wm">'+['M','T','W','T','F','S','S'].map(x=>'<span class="h">'+x+'</span>').join('')
+ +'<span class="fl" title="Week streak"><svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true"><path d="M8 0c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 2 3 4 1-3 1-6 1-9z" fill="#f5b800"/></svg>'+st.n+'</span>';
+ const first=new Date(y,mo,1),last=new Date(y,mo+1,0);let mon=weekDates(first)[0];
+ while(mon<=last){
+  for(let i=0;i<7;i++){const d=addDays(mon,i),k=key(d),inM=d.getMonth()===mo,done=!!S.wdone[k],fut=k>tk;
+   h+='<button class="d'+(done?' on':'')+(inM?'':' out')+(fut&&!done?' fut':'')+(k===tk?' tdy':'')+'" '+(inM&&!fut?'data-a="wtog" data-k="'+k+'" aria-pressed="'+done+'" ':'disabled ')+'aria-label="'+d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+(done?', workout done':'')+'">'+(done?'✓':d.getDate())+'</button>'}
+  const wi=wkInfo(mon);h+='<span class="k'+(wi.full?' on':wi.hit?' half':'')+'">'+(wi.full?'✓':'')+'</span>';
+  mon=addDays(mon,7)}
+ return h+'</div><p class="muted" style="margin:14px 0 0;font-size:13px">Mark today’s workout done and it fills in here. Tap a past day to fix it. A week counts toward your streak when you finish every workout planned that week.</p></section>'
+}
 function workoutCard(D,dk,isToday){
  const dow=D.getDay();const done=!!S.wdone[dk];
  const nx=S.workouts[(dow+1)%7];
@@ -506,7 +544,7 @@ function dayView(){
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
- +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+quoteCard()+timerCard()
+ +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+workoutMonth(D)+moodCard(dk,isToday)+quoteCard()+timerCard()
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+moneyPanel(ymKey(D),'25')
  +thoughtCard(dk)+'</div>';
@@ -646,6 +684,7 @@ document.addEventListener('click',e=>{
  if(a==='tpre'){const T=UI.timer;if(!T.running){T.mins=+t.dataset.m;T.left=T.mins*60;T.done=false;render()}return}
  if(a==='tgo'){const T=UI.timer;if(T.running){tick();if(T.running){T.running=false;T.end=null}}else{if(T.done||T.left<=0){T.left=T.mins*60}T.done=false;T.end=Date.now()+T.left*1000;T.running=true}render();return}
  if(a==='treset'){const T=UI.timer;T.running=false;T.end=null;T.done=false;T.left=T.mins*60;render();return}
+ if(a==='wtog'){const k=t.dataset.k;if(S.wdone[k])delete S.wdone[k];else S.wdone[k]=true;commit();return}
  if(a==='wdone'){if(S.wdone[dk])delete S.wdone[dk];else S.wdone[dk]=true;commit();return}
  if(a==='editW'){UI.editW=t.dataset.d===''?null:+t.dataset.d;render();return}
  if(a==='saveW'){const d=+t.dataset.d;S.workouts[d]={title:val('wT').trim()||'Workout',ex:val('wE')};UI.editW=null;commit();return}
