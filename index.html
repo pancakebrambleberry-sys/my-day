@@ -376,9 +376,9 @@ function applyTheme(name){
 }
 let THPANEL=false,MNPANEL=false;
 const CURS=['₱','$','€','£','¥','₹','₩','RM','S$','A$','C$','HK$','NT$','Rp','฿','₫','R','CHF','kr','AED'];
-function moneyBtn(){return '<button class="btn sm ghost" data-a="mnmenu">Money</button>'}
+function moneyBtn(){return '<button class="btn sm ghost" data-a="mnmenu">Paycheck</button>'}
 function moneyPanelSet(){if(!MNPANEL)return '';
- return '<div class="lkp"><h3>Money settings</h3><p>Set this to match how you get paid.</p>'
+ return '<div class="lkp"><h3>Paycheck settings</h3><p>Set this to match how you get paid.</p>'
   +'<label>Currency symbol <input class="in" list="curs" data-c="cur" value="'+esc(curSym())+'" maxlength="4" style="width:90px;margin:0 0 0 6px" aria-label="Currency symbol"></label><datalist id="curs">'+CURS.map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>'
   +'<label>Paychecks per month <select class="in" data-c="pays" style="width:auto;margin:0 0 0 6px"><option value="1"'+(single()?' selected':'')+'>1 (once a month)</option><option value="2"'+(single()?'':' selected')+'>2 (twice a month)</option></select></label>'
   +'<label>Payday <input class="in" type="number" min="1" max="31" data-c="payday" data-p="10" value="'+payDay('10')+'" style="width:80px;margin:0 0 0 6px" aria-label="First payday"></label>'
