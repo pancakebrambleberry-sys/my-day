@@ -21,7 +21,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .wrap{max-width:1180px;margin:0 auto;padding:14px}
 .shell{background:#fffcef;border:1px solid var(--line);border-radius:28px;padding:22px}
 .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.logo{font:600 17px 'Fraunces',serif;background:#fff;border:1px solid var(--line);border-radius:99px;padding:8px 16px;display:flex;gap:8px;align-items:center}
+.logo{cursor:pointer;color:inherit;font:600 17px 'Fraunces',serif;background:#fff;border:1px solid var(--line);border-radius:99px;padding:8px 16px;display:flex;gap:8px;align-items:center}
 .tabs{display:flex;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px;margin:0 auto}
 .tab{padding:8px 22px;border-radius:99px;font-weight:700;color:var(--mute)}
 .tab.on{background:var(--pri);color:var(--ink)}
@@ -296,7 +296,7 @@ const LK='pbb-lock-v1';
 function lkGet(){try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(_){return null}}
 async function lkHash(pw,salt){const t=salt+'|'+pw;try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_){}let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'f'+h}
 async function lkCheck(pw){const l=lkGet();return !!l&&(await lkHash(pw,l.s))===l.h}
-let LOCKED=!!lkGet(),LKPANEL=false,LKNOTE='',LKOK=false;
+let LOCKED=!!lkGet()&&!(()=>{try{const v=sessionStorage.getItem('pbb-unl');sessionStorage.removeItem('pbb-unl');return v==='1'}catch(_){return false}})(),LKPANEL=false,LKNOTE='',LKOK=false;
 const $v=id=>{const e=document.getElementById(id);return e?e.value:''};
 function lockBtn(){return '<button class="btn sm ghost" data-a="lockmenu">'+(lkGet()?'Password':'Set password')+'</button>'}
 function lockPanel(){if(!LKPANEL)return '';const has=!!lkGet();
@@ -634,7 +634,7 @@ function render(){
  const step=UI.view==='day'?'day':UI.view==='week'?'week':'month';
  const body=UI.view==='day'?dayView():UI.view==='week'?weekView():monthView();
  document.getElementById('app').innerHTML=
-  '<div class="top"><div class="logo">🌿 My Day</div><div class="tabs" role="tablist">'
+  '<div class="top"><button class="logo" data-a="refresh" title="Refresh" aria-label="Refresh My Day">🌿 My Day</button><div class="tabs" role="tablist">'
   +['day','week','month'].map(v=>'<button class="tab'+(UI.view===v?' on':'')+'" role="tab" aria-selected="'+(UI.view===v)+'" data-a="view" data-v="'+v+'">'+v[0].toUpperCase()+v.slice(1)+'</button>').join('')
   +'</div>'+lockBtn()+(AUTH.enabled&&!AUTH.user?'<button class="btn sm" id="sync" data-a="signin">Sign in with Google to sync</button>':'<span class="sync" id="sync" aria-live="polite">'+syncLabel()+'</span>'+(AUTH.user?'<button class="btn sm ghost" data-a="signout">Sign out</button>':''))+'</div>'
   +lockPanel()+'<div class="nav"><h1>'+esc(label)+'</h1><button class="nb" data-a="nav" data-n="-1" aria-label="Previous '+step+'">‹</button><button class="nb" data-a="nav" data-n="1" aria-label="Next '+step+'">›</button><button class="btn ghost sm" data-a="nav" data-n="0">Today</button></div>'+body;
@@ -655,6 +655,7 @@ function addThought(){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-a]');if(!t)return;
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
+ if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
  if(a==='lk-open'){lkCheck($v('lk-pw')).then(ok=>{if(ok){LOCKED=false;render()}else{const m=document.getElementById('lk-msg');if(m)m.textContent='Wrong password.';const i=document.getElementById('lk-pw');if(i){i.value='';i.focus()}}});return}
  if(a==='lockmenu'){LKPANEL=!LKPANEL;LKNOTE='';LKOK=false;render();return}
  if(a==='lk-now'){if(lkGet()){LOCKED=true;LKPANEL=false;render()}return}
