@@ -16,6 +16,7 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 |---|---|
 | **Daily reminders** | Your own checklist for the day, such as meds, stretching, feeding the pet or clearing your inbox. Each one has a time and turns "due" when it's late. |
 | **Workout plan + streak** | A workout set for each weekday that shows up on its day. Mark it done and a monthly calendar fills in, with a weekly streak. |
+| **Weekly and monthly recap** | On the Week and Month views, a summary of reminders, workouts, water, mood, thoughts and (monthly) money, compared with the last week or month. It is worked out from your own entries, with no AI. |
 | **Water tracker** | Tap to log up to 8 glasses a day. |
 | **Coming up** | Add something for a future date. Tick it off when done; if you miss it, it stays and turns red as overdue. |
 | **First-time welcome** | New people answer a few quick questions (name, currency, paydays, salary) so they start with their own numbers. To try it again without touching your data, add `#welcome` to the link (preview only, nothing is saved). **Backup → Start over** signs out and returns to the welcome page. |
@@ -42,6 +43,8 @@ pbb-day is a personal dashboard made of one web page (`index.html`). Open it, ti
 
 <p align="center">
   <img src="images/truth-card.png" alt="The Unhinged truth card, a playful summary of your thought dump" width="760">
+  <br><br>
+  <img src="images/recap.png" alt="The weekly recap card on the Week view" width="760">
 </p>
 
 <p align="center">
