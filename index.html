@@ -257,7 +257,7 @@ if(migrate()&&S.updated){try{localStorage.setItem(STORE,JSON.stringify(S))}catch
 let ref=null,syncState='local',writing=false,pending=false,timer=null;
 function syncLabel(){return syncState==='signedout'?'Sign in to sync':syncState==='saved'?'✓ Synced to your Google account':syncState==='saving'?'Saving…':syncState==='error'?'⚠ Couldn’t sync, saved on this device':'Saved on this device'}
 function setSync(s){syncState=s;const el=document.getElementById('sync');if(el)el.textContent=syncLabel()}
-let READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
+let SHLINK='',READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
 function save(){
  if(READONLY)return;
  S.updated=Date.now();
@@ -294,7 +294,7 @@ async function initCloud(){
   AUTH.auth.getRedirectResult().catch(()=>{});
   AUTH.auth.onAuthStateChanged(u=>{
    AUTH.user=u;
-   if(!u){ref=null;setSync('signedout');render();return}
+   if(!u){ref=null;setSync('signedout');render();const m=/[#&]v=([^&]+)/.exec(location.hash||'');if(m&&!READONLY){try{vwOpen(decodeURIComponent(m[1]))}catch(_){}}return}
    attach(fs.collection('users').doc(u.uid).collection('data').doc('state')).catch(()=>{ref=null;setSync('error');render()});
   });
   setSync('signedout');render();
@@ -319,7 +319,7 @@ function sharePanel(){
   +'<input id="sh-code" type="text" autocomplete="off" placeholder="'+(on?'New code (leave empty to keep the same)':'Pick a code (6+ characters)')+'" aria-label="Share code">'
   +'<label><input type="checkbox" id="sh-money"'+(S.share&&S.share.money?' checked':'')+'> Show money (salary and bills)</label>'
   +'<label><input type="checkbox" id="sh-th"'+(S.share&&S.share.th?' checked':'')+'> Show thought dump</label>'
-  +'<div class="msg'+(SHOK?' ok':'')+'" id="sh-msg" role="alert">'+esc(SHNOTE)+'</div>'
+  +'<div class="msg'+(SHOK?' ok':'')+'" id="sh-msg" role="alert">'+esc(SHNOTE)+'</div>'+(SHLINK?'<input id="sh-link" type="text" readonly value="'+esc(SHLINK)+'" aria-label="Share link"><div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="sh-copy">Copy link</button></div>':'')
   +'<div class="row"><button class="btn sm" data-a="sh-save">'+(on?'Update':'Start sharing')+'</button>'+(on?'<button class="btn sm ghost" data-a="sh-stop">Stop sharing</button>':'')+'<button class="btn sm ghost" data-a="shmenu">Close</button></div></div>'}
  if(SHP==='view'&&!AUTH.user){
   return '<div class="lkp"><h3>View a shared dashboard</h3><p>Type the code you were given. You can only look. It isn’t remembered, so you’ll be asked again next time.</p>'
@@ -334,6 +334,16 @@ function roLock(){const app=document.getElementById('app');if(!app)return;
  app.insertAdjacentHTML('afterbegin','<div class="robar"><span>Viewing a shared dashboard. Read-only.</span><button class="btn sm" data-a="ro-exit">Exit</button></div>');
  app.querySelectorAll('input,textarea,select').forEach(e=>{e.disabled=true});
  app.querySelectorAll('[data-a]').forEach(b=>{if(!ROK.has(b.dataset.a))b.disabled=true})}
+async function vwOpen(code){code=(code||'').trim();if(!code){SHNOTE='Type the code first.';render();return}
+  if(!AUTH.fs){SHNOTE='Not available right now.';render();return}
+  const h=await shHash(code);let first=true;
+  if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}
+  UNSUB=AUTH.fs.collection('shares').doc(h).onSnapshot(snap=>{
+   if(!snap.exists){if(first){first=false;SHNOTE='That code didn’t work.';if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}render()}else vwExit('The owner stopped sharing.');return}
+   try{const d=snap.data()||{};const ns=Object.assign(defaults(),JSON.parse(d.json));
+    if(!READONLY){SAVEDS=S;READONLY=true;UI.date=mid(new Date());UI.view='day';SHP=false}
+    S=ns;SHNOTE='';first=false;render()}catch(e){SHNOTE='Couldn’t open it.';render()}
+  },err=>{SHNOTE=/permission/i.test((err&&err.code)||'')?'Sharing isn’t switched on yet.':'Couldn’t open it.';first=false;render()})}
 function vwExit(note){if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}if(READONLY){READONLY=false;if(SAVEDS)S=SAVEDS;SAVEDS=null}SHNOTE=note||'';render()}
 /* ---------- color themes ---------- */
 const THEMES={
@@ -732,7 +742,7 @@ document.addEventListener('click',e=>{
  const a=t.dataset.a,id=t.dataset.id,p=t.dataset.p,dk=key(UI.date);
  if(READONLY&&!ROK.has(a))return;
  if(a==='ro-exit'){vwExit();return}
- if(a==='shmenu'){SHP=SHP==='share'?false:'share';SHNOTE='';SHOK=false;render();return}
+ if(a==='shmenu'){SHP=SHP==='share'?false:'share';if(SHP===false)SHLINK='';SHNOTE='';SHOK=false;render();return}
  if(a==='vwmenu'){SHP=SHP==='view'?false:'view';SHNOTE='';render();return}
  if(a==='sh-save'){(async()=>{
   const code=val('sh-code').trim(),money=!!(document.getElementById('sh-money')||{}).checked,th=!!(document.getElementById('sh-th')||{}).checked;
@@ -740,19 +750,10 @@ document.addEventListener('click',e=>{
   if((!had||code)&&code.length<6){SHNOTE='Pick a code with at least 6 characters.';SHOK=false;render();return}
   let h=had;if(code){h=await shHash(code);if(had&&had!==h)await shDel(had)}
   S.share={h,money,th};commit();await shPush();
-  SHNOTE=code?'Sharing is on. Give friends the code exactly as you typed it.':'Updated.';SHOK=true;render()})();return}
- if(a==='sh-stop'){(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
- if(a==='vw-open'){(async()=>{
-  const code=val('vw-code').trim();if(!code){SHNOTE='Type the code first.';render();return}
-  if(!AUTH.fs){SHNOTE='Not available right now.';render();return}
-  const h=await shHash(code);let first=true;
-  if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}
-  UNSUB=AUTH.fs.collection('shares').doc(h).onSnapshot(snap=>{
-   if(!snap.exists){if(first){first=false;SHNOTE='That code didn’t work.';if(UNSUB){try{UNSUB()}catch(_){}UNSUB=null}render()}else vwExit('The owner stopped sharing.');return}
-   try{const d=snap.data()||{};const ns=Object.assign(defaults(),JSON.parse(d.json));
-    if(!READONLY){SAVEDS=S;READONLY=true;UI.date=mid(new Date());UI.view='day';SHP=false}
-    S=ns;SHNOTE='';first=false;render()}catch(e){SHNOTE='Couldn’t open it.';render()}
-  },err=>{SHNOTE=/permission/i.test((err&&err.code)||'')?'Sharing isn’t switched on yet.':'Couldn’t open it.';first=false;render()})})();return}
+  SHLINK=code?location.origin+location.pathname+'#v='+encodeURIComponent(code):SHLINK;SHNOTE=code?'Sharing is on. Send friends the link below.':'Updated.';SHOK=true;render()})();return}
+ if(a==='sh-copy'){const t=SHLINK;try{navigator.clipboard.writeText(t).then(()=>{SHNOTE='Link copied.';render()},()=>{const e=document.getElementById('sh-link');if(e){e.select()}})}catch(_){const e=document.getElementById('sh-link');if(e)e.select()}return}
+ if(a==='sh-stop'){SHLINK='';(async()=>{const h=S.share&&S.share.h;await shDel(h);delete S.share;commit();SHNOTE='Sharing stopped. The old code no longer works.';SHOK=true;render()})();return}
+ if(a==='vw-open'){vwOpen(val('vw-code'));return}
  if(a==='thmenu'){THPANEL=!THPANEL;render();return}
  if(a==='theme'){S.theme=t.dataset.t;commit();return}
  if(a==='refresh'){try{if(!LOCKED&&lkGet())sessionStorage.setItem('pbb-unl','1')}catch(_){}location.reload();return}
