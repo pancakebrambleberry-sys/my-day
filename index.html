@@ -222,6 +222,7 @@ function defaults(){return{
   {id:'r3',t:'18:00',l:'Workout'}
  ],
  done:{},
+ up:[],
  salary:{'10':30000,'25':30000},
  pay:{'10':10,'25':25},pays:2,cur:'₱',
  bills:[
@@ -263,7 +264,7 @@ let ref=null,syncState='local',writing=false,pending=false,timer=null;
 function syncLabel(){return syncState==='signedout'?'Sign in to sync':syncState==='saved'?'✓ Synced to your Google account':syncState==='saving'?'Saving…':syncState==='error'?'⚠ Couldn’t sync, saved on this device':'Saved on this device'}
 function setSync(s){syncState=s;const el=document.getElementById('sync');if(el)el.textContent=syncLabel()}
 let SHLINK='',READONLY=false,SAVEDS=null,SHP=false,SHNOTE='',SHOK=false,UNSUB=null;
-function save(){
+function save(){if(S.up){const t=key(new Date());S.up=S.up.filter(u=>u.d>=t)}
  if(READONLY)return;
  S.updated=Date.now();
  try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}
@@ -567,6 +568,17 @@ function remindersCard(dk,isToday){
  +'<div class="addrow"><input class="in" data-keep="newRem" placeholder="New reminder…" aria-label="New reminder"><input class="in" style="flex:0 0 112px" type="time" data-keep="newRemT" value="09:00" aria-label="Reminder time"><button class="btn sm" data-a="addRem">Add</button></div></section>';
 }
 
+function upList(){const t=key(new Date());return (S.up||[]).filter(u=>u.d>=t).sort((a,b)=>a.d.localeCompare(b.d)||a.l.localeCompare(b.l))}
+function upWhen(d){const t=mid(new Date()),x=new Date(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10),12);const n=Math.round((x-t)/864e5);return n===0?'Today':n===1?'Tomorrow':'in '+n+' days'}
+function upcomingCard(){
+ const list=upList();
+ const rows=list.map(u=>{const x=new Date(+u.d.slice(0,4),+u.d.slice(5,7)-1,+u.d.slice(8,10),12);const w=upWhen(u.d);
+  return '<div class="rem'+(w==='Today'?' due':'')+'"><span class="rl">'+esc(u.l)+'</span><span class="tm">'+(w==='Today'?'today':shortDate(x)+' · '+w)+'</span><button class="x" data-a="delUp" data-id="'+u.id+'" aria-label="Remove '+esc(u.l)+'">✕</button></div>'}).join('');
+ return '<section class="card s4"><div class="ch"><h2>Coming up</h2><span class="chip">'+list.length+' ahead</span></div>'
+ +(rows||'<div class="empty">Nothing coming up. Add something you want to remember on a certain day. It disappears after that day.</div>')
+ +'<div class="addrow"><input class="in" data-keep="newUp" placeholder="e.g. Dentist, mom\'s birthday…" aria-label="Upcoming reminder"><input class="in" style="flex:0 0 140px" type="date" data-keep="newUpD" min="'+key(new Date())+'" aria-label="Date"><button class="btn sm" data-a="addUp">Add</button></div></section>';
+}
+
 function workoutBlock(dow,dk,compact){
  const w=S.workouts[dow]||{title:'Rest day',ex:''};
  if(UI.editW===dow){
@@ -725,13 +737,14 @@ function dayView(){
  const bits=[];
  if(isToday){
   bits.push(st.n-st.c>0?(st.n-st.c)+' reminder'+(st.n-st.c>1?'s':'')+' left today.':'All reminders done 🎉.');
+  {const tu=upList().filter(u=>u.d===key(new Date()));if(tu.length)bits.push('Today: '+tu.map(u=>u.l).join(', ')+'.')}
   bits.push('Workout: '+w.title+'.');
   bits.push('Next payday is '+DOW[np.getDay()]+', '+shortDate(np)+' ('+(nd===0?'today':'in '+nd+' day'+(nd>1?'s':''))+').');
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
  return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(dispName())+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,dispName().length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile" data-money="1"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+payDay(pw)+ordn(payDay(pw))+' bills</span></div></div>'
- +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
+ +remindersCard(dk,isToday)+(isToday?upcomingCard():'')+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+workoutMonth(D)+'<div class="s6 stack">'+quoteCard()+timerCard()+'</div>'
  +sampleNote()
  +moneyPanel(ymKey(D),'10')+(single()?'':moneyPanel(ymKey(D),'25'))
  +truthCard(S.thoughts.filter(t=>t.d===dk),[dk],'day')+thoughtCard(dk)+'</div>';
@@ -929,6 +942,8 @@ document.addEventListener('click',e=>{
  if(a==='nav'){const n=+t.dataset.n;if(n===0)UI.date=mid(new Date());else if(UI.view==='day')UI.date=addDays(UI.date,n);else if(UI.view==='week')UI.date=addDays(UI.date,7*n);else UI.date=new Date(UI.date.getFullYear(),UI.date.getMonth()+n,1,12);render();return}
  if(a==='rem'){const d=S.done[dk]=S.done[dk]||{};d[id]=!d[id];if(!d[id])delete d[id];commit();return}
  if(a==='editRem'){UI.editRem=!UI.editRem;render();return}
+ if(a==='delUp'){S.up=(S.up||[]).filter(u=>u.id!==id);commit();return}
+ if(a==='addUp'){const l=val('newUp').trim(),d=val('newUpD');if(!l||!d||d<key(new Date()))return;(S.up=S.up||[]).push({id:uid(),d,l});commit();return}
  if(a==='delRem'){S.rems=S.rems.filter(r=>r.id!==id);commit();return}
  if(a==='addRem'){const l=val('newRem').trim();if(!l)return;S.rems.push({id:uid(),t:val('newRemT')||'09:00',l});const f=document.querySelector('[data-keep="newRem"]');if(f)f.value='';commit();return}
  if(a==='paid'){const k=t.dataset.ym+'-'+p;const m=S.paid[k]=S.paid[k]||{};m[id]=!m[id];if(!m[id])delete m[id];commit();return}
