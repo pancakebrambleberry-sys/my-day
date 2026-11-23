@@ -473,7 +473,7 @@ function dayView(){
   bits.push('Next payday is '+DOW[np.getDay()]+', '+shortDate(np)+' ('+(nd===0?'today':'in '+nd+' day'+(nd>1?'s':''))+').');
  }else bits.push('Viewing '+longDate(D)+'. You can still log and edit this day.');
  const greeting=isToday?(new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening'):'Looking back';
- return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(S.name)+'" placeholder="friend" aria-label="Your name" size="'+Math.max(6,S.name.length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
+ return '<div class="grid"><div class="hello"><h1>'+greeting+', <input class="nameinp" data-c="name" value="'+esc(S.name||'Panella Bianca')+'" placeholder="Panella Bianca" aria-label="Your name" size="'+Math.max(6,(S.name||'Panella Bianca').length+1)+'"></h1><p>'+bits.join(' ')+'</p></div>'
  +'<div class="tiles"><div class="tile"><b>'+st.c+'/'+st.n+'</b><span>Reminders done</span></div><div class="tile"><b>'+(mst.n?memo(mst.avg):'·')+'</b><span>'+(mst.n?'Mood: '+mword(mst.avg):'Mood not logged')+'</span></div><div class="tile"><b'+(pc.left<0?' style="color:var(--bad)"':'')+'>'+pct(pc.pct)+'</b><span>Left after '+pw+'th bills</span></div></div>'
  +remindersCard(dk,isToday)+workoutCard(D,dk,isToday)+moodCard(dk,isToday)+quoteCard()+timerCard()
  +sampleNote()
