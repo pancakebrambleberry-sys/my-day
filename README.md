@@ -3,7 +3,7 @@
 **A calm, one-page planner for your day.** Reminders, money, workouts, mood and a thought dump, all in one place that opens in your browser. It's free, has no ads, and works on your phone and laptop.
 
 <p align="center">
-  <img src="images/day-view.png" alt="Day view with reminders, workout, mood, workout streak calendar, quote and focus timer" width="860">
+  <img src="images/day-view.png" alt="Day view with reminders, Coming up, workout, mood, workout streak calendar, quote and focus timer" width="860">
 </p>
 
 ## What is it?
@@ -138,6 +138,15 @@ The keys in the config are not secrets. Anyone can see them in the page. The sec
 Press **Theme** at the top of the page and choose Yellow, Orange, Red, Pink, Purple, Maroon, Blue, Green or Gray. The choice is saved with your data.
 
 To add your own color, find the `THEMES` list in `index.html`, copy one entry, give it a new name, and change its color codes.
+
+## Coming up (things that happen on a certain date)
+
+Press **+ Add** on the small **Coming up** card, type what it is (a dentist visit, a birthday, a bill) and pick the date. It shows the date next to each item.
+
+- Tick the box when it's done. It gets crossed out, and you can untick it if you change your mind.
+- Anything you haven't ticked stays in the list. If the date has passed it turns red and says **overdue**, so nothing gets forgotten.
+- Ticked items disappear the next day.
+- The card shows on every day you browse, three items at a time, with a "+ more" button.
 
 ## Password lock
 
