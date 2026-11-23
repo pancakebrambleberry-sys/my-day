@@ -144,6 +144,21 @@ Press **Theme** at the top of the page and choose Yellow, Orange, Red, Pink, Pur
 
 To add your own color, find the `THEMES` list in `index.html`, copy one entry, give it a new name, and change its color codes.
 
+## Try the welcome page
+
+New people see a short welcome page the first time they open the app. To try it yourself without touching your own data, open the link with `#welcome` on the end:
+
+`https://pancakebrambleberry-sys.github.io/my-day/#welcome`
+
+1. You see the welcome page with a yellow bar at the top saying it is a preview.
+2. Answer the questions (name, currency, one or two paychecks, payday dates, salary, example bills) and press **Start**, or press **Skip for now**.
+3. You land on the dashboard with your answers, and the yellow bar stays. Nothing is saved or synced, and your real data is not touched.
+4. If you refresh the page, you go back to a blank welcome page. Every preview starts fresh.
+5. Press **Exit preview** to go to the normal app. The answers you typed in the preview are not carried over.
+   - On a device you already use, you see your own dashboard, just as you left it.
+   - On a device that has never opened the app, you see the real welcome page, and this time your answers are saved when you press **Start**.
+6. To go back to the real welcome page on a device you already use, open **Backup**, go to **Start over** at the bottom and confirm. This clears that device. If you are not signed in with Google, download a backup first.
+
 ## Coming up (things that happen on a certain date)
 
 Press **+ Add** on the small **Coming up** card, type what it is (a dentist visit, a birthday, a bill) and pick the date. It shows the date next to each item.
@@ -177,6 +192,29 @@ Note: anyone with the code can see what you chose to share, so use a code that i
 ## What's new
 
 See [CHANGELOG.md](CHANGELOG.md) for every update that has been made.
+
+## FAQ
+
+**Is there a task bar I can reset every day, just for daily tasks?**
+Kind of. The **Daily reminders** card is your daily checklist: you add things like stretching, water or a workout, tick them off, and they reset on their own every day. **Coming up** handles things with a date, like a dentist visit or a bill. There is no big to-do list or task manager, on purpose. I want pbb-day to stay calm and uncluttered, more of a daily check-in than another app full of tasks. I also still write my everyday tasks in a notebook, because I like writing them by hand. The app is for the gentle things around that: reminders, routines, mood, money and a place to dump thoughts. If you want a full task list, the code is open, so you can add one to your own copy.
+
+**Does it cost anything?**
+No. The page is free to use, and a personal copy fits comfortably in Firebase's free plan.
+
+**Where is my data stored?**
+On your device. If you sign in with Google, it is also saved to the cloud so it syncs between your phone and laptop. On the shared link, that cloud is the Firebase project of whoever runs the app, so if you want full control of your data, make your own copy (Option 3). You can also download a full backup or export your thoughts any time from the **Backup** panel.
+
+**Do I have to sign in?**
+No. Without signing in, everything is saved on that one device only. Sign in with Google if you want it on more than one device.
+
+**Do I need a password?**
+No, the lock is optional. If you set one, it only applies to the device where you set it.
+
+**Can someone see my dashboard without being able to change it?**
+Yes. Press **Share** to get a view-only link. Money and thoughts stay hidden unless you include them, and **Stop sharing** switches it off.
+
+**What if I skip a day because I'm resting or sick?**
+Press **Rest day** or **Sick day** on that day. It does not break your streak or count against your recap.
 
 ## Tips
 
